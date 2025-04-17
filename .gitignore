@@ -177,3 +177,4 @@ cython_debug/
 /lightning_logs
 /saved_models
 /processed_data
+/bibliography
