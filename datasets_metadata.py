@@ -6,21 +6,29 @@ ts_metadata = {
     "ETTh1": {
         "target_ts": "OT",
         "exog_list": ['HUFL', 'HULL', 'MUFL', 'MULL', "LUFL", "LULL"],
-        "freq": "h"
+        "freq": "h",
+        "test_size": 2000,
+        "valid_size": 1000,
     },
     "ETTh2": {
         "target_ts": "OT",
         "exog_list": ['HUFL', 'HULL', 'MUFL', 'MULL', "LUFL", "LULL"],
-        "freq": "h"
+        "freq": "h",
+        "test_size": 2000,
+        "valid_size": 1000,
     },
     "ETTm1": {
         "target_ts": "OT",
         "exog_list": ['HUFL', 'HULL', 'MUFL', 'MULL', "LUFL", "LULL"],
-        "freq": "min"
+        "freq": "min",
+        "test_size": 2000,
+        "valid_size": 1000,
     },
     "ETTm2": {
         "target_ts": "OT",
         "exog_list": ['HUFL', 'HULL', 'MUFL', 'MULL', "LUFL", "LULL"],
-        "freq": "min"
+        "freq": "min",
+        "test_size": 2000,
+        "valid_size": 1000,
     }
 }
