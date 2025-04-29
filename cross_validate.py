@@ -56,7 +56,7 @@ for dataset_name in datasets:
 
     evaluation_df = evaluate(cv_df.drop(columns='cutoff'), metrics=[mse, mae, rmse, mape, smape])
     evaluation_df['best_model'] = evaluation_df.drop(columns=['metric', 'unique_id']).idxmin(axis=1)
-    evaluation_df.to_csv(f"./results/horizon{HORIZON}/{dataset_name}.csv")
+    evaluation_df.to_csv(f"./results/horizon{HORIZON}/{dataset_name}.csv", index=False)
 
     nf.save(
         path=f"./saved_models/{dataset_name}_h{HORIZON}.csv",
