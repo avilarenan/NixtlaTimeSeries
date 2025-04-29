@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from results_utils import get_results
+from results_utils import get_results, get_enhancement
 
 st.set_page_config(
     page_title="Results",
@@ -14,10 +14,29 @@ st.title("Results")
 
 df = get_results()
 
-st.write("Raw")
-st.write(df)
+df_comp = get_enhancement(df)
 
-col1, col2, col3, col4, col5 = st.columns(5)
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.write("Original")
+    st.write(df)
+with col2:
+    st.write("Enhancement")
+    st.write(df_comp)
+with col3:
+    st.write("Summary")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric("Count improv.", value=len(df_comp[df_comp["shaped_improv"] > 0]))
+    with col2:
+        st.metric("Count neutral", value=len(df_comp[df_comp["shaped_improv"] == 0]))
+    with col3:
+        st.metric("Count degraded", value=len(df_comp[df_comp["shaped_improv"] < 0]))
+
+st.divider()
+
+col1, col2, col3 = st.columns(3)
 with col1:
     unique_id_filter = st.multiselect("unique_id_filter", options=df["unique_id"].unique())
 df = df[df["unique_id"].isin(unique_id_filter)]
@@ -25,23 +44,39 @@ df = df[df["unique_id"].isin(unique_id_filter)]
 with col2:
     metric_filter = st.multiselect("metric_filter", options=df["metric"].unique())
 df = df[df["metric"].isin(metric_filter)]
+df_comp = df_comp[df_comp["metric"].isin(metric_filter)]
 
 with col3:
-    dataset_filter = st.multiselect("dataset_name_filter", options=df["dataset_name"].unique())
-df = df[df["dataset_name"].isin(dataset_filter)]
-
-with col4:
     horizon_filter = st.multiselect("horizon_filter", options=df["horizon"].unique())
 df = df[df["horizon"].isin(horizon_filter)]
+df_comp = df_comp[df_comp["horizon"].isin(horizon_filter)]
 
-with col5:
-    model_filter = st.multiselect("model_filter", options=df["model"].unique())
+dataset_filter = st.multiselect("dataset_name_filter", options=df["dataset_name"].unique())
+df = df[df["dataset_name"].isin(dataset_filter)]
+df_comp = df_comp[df_comp["dataset_name"].isin(dataset_filter)]
+
+model_filter = st.multiselect("model_filter", options=df["model"].unique())
 df = df[df["model"].isin(model_filter)]
+df_comp = df_comp[df_comp["model"].isin(model_filter)]
 
-st.write("Filtered")
-st.write(df)
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.write("Filtered")
+    st.write(df)
+with col2:
+    st.write("Enhancement")
+    st.write(df_comp)
+with col3:
+    st.write("Summary")
 
+    col1, col2, col3 = st.columns(3)
 
+    with col1:
+        st.metric("Count improv.", value=len(df_comp[df_comp["shaped_improv"] > 0]))
+    with col2:
+        st.metric("Count neutral", value=len(df_comp[df_comp["shaped_improv"] == 0]))
+    with col3:
+        st.metric("Count degraded", value=len(df_comp[df_comp["shaped_improv"] < 0]))
 
 graph_style = st.selectbox("Graph", options=["Scatter", "Bar"])
 
