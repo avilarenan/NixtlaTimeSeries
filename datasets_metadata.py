@@ -30,5 +30,19 @@ ts_metadata = {
         "freq": "min",
         "test_size": 2000,
         "valid_size": 1000,
+    },
+    "Weather" : {
+        "target_ts": "OT",
+        "exog_list": ['H2OC (mmol/mol)', 'PAR (�mol/m�/s)', 'SWDR (W/m�)', 'T (degC)', 'Tdew (degC)', 'Tlog (degC)', 'Tpot (K)', 'VPact (mbar)', 'VPdef (mbar)', 'VPmax (mbar)', 'max. PAR (�mol/m�/s)', 'max. wv (m/s)', 'p (mbar)', 'rain (mm)', 'raining (s)', 'rh (%)', 'rho (g/m**3)', 'sh (g/kg)', 'wd (deg)', 'wv (m/s)'],
+        "freq": "10min",
+        "test_size": 2000,
+        "valid_size": 1000,
+    },
+    "TrafficL" : {
+        "target_ts": "OT",
+        "exog_list": list(range(860+1)),
+        "freq": "h",
+        "test_size": 2000,
+        "valid_size": 1000,
     }
 }
