@@ -41,7 +41,8 @@ for horizon in tqdm(HORIZONS):
         test_size = ts_metadata[dataset_name]["test_size"]
         valid_size = ts_metadata[dataset_name]["valid_size"]
 
-        df = pd.read_parquet(f"./processed_data/{dataset_name}.parquet")
+        # df = pd.read_parquet(f"./processed_data/{dataset_name}.parquet")
+        df = pd.read_csv(f"./processed_data/{dataset_name}.csv")
         df["ds"] = pd.to_datetime(df["ds"])
 
         # nf = NeuralForecast.load(path=f'./saved_models/{dataset_name}')

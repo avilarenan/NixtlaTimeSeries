@@ -1,4 +1,4 @@
-from neuralforecast.losses import MAE, MSE, RMSE, MAPE, SMAPE
+from neuralforecast.losses.pytorch import MAE, MSE, RMSE, MAPE, SMAPE
 
 def config_model_generator(horizon, model_class, n_series=None, additional_options={}, backend="optuna"):
     def config(trial):
@@ -21,7 +21,7 @@ def general_config(horizon, input_size, exog_list, model_name):
                 "horizon": horizon,
                 "input_size": input_size,
                 "exog_list": exog_list,
-                "loss": MAE(),
+                # "loss": MAE(),
                 "max_steps": 2000,
                 "batch_size": 1,
                 "windows_batch_size": 32,

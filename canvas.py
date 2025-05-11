@@ -9,7 +9,9 @@ from tqdm.notebook import tqdm
 
 from datasets_metadata import ts_metadata
 
-dataset_name = "ETTh1"
+# print(pd.read_parquet("./processed_data/Weather.parquet").columns)
+
+dataset_name = "ECL"
 
 Y_df = LongHorizon2.load(directory='data', group=dataset_name)
 
@@ -21,10 +23,15 @@ farm_windows = ts_metadata[dataset_name]["farm_windows"]
 
 Y_df["ds"] = pd.to_datetime(Y_df["ds"])
 Y_df = Y_df.set_index("ds")
+Y_df["unique_id"] = Y_df["unique_id"].astype('string')
+print(Y_df.dtypes)
+print(Y_df)
+print(Y_df["unique_id"].unique())
 
 # Pivotting original dataset in order to consider other series as exogenous
 df_raw = Y_df[Y_df["unique_id"] == target_ts]
 for item in tqdm(Y_df["unique_id"].unique()):
+    item = str(item)
     if item == target_ts:
         continue
     df_raw[item] = Y_df[Y_df["unique_id"] == item]["y"]

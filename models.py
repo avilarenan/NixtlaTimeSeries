@@ -12,6 +12,8 @@ from model_metadata import general_config
 
 from ray import tune
 
+from neuralforecast.losses.pytorch import MAE, MSE, RMSE, MAPE, SMAPE
+
 def get_nf(horizon, lookback, freq, exog_list=[], num_samples=5, backend="optuna", model_type="univariate"):
 
     if model_type =="univariate":
@@ -19,6 +21,7 @@ def get_nf(horizon, lookback, freq, exog_list=[], num_samples=5, backend="optuna
             _model(
                 h=horizon,
                 backend=backend,
+                loss=MAE(),
                 config=general_config(
                     horizon=horizon,
                     input_size=lookback,
