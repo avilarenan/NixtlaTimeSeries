@@ -9,6 +9,7 @@ ts_metadata = {
         "freq": "h",
         "test_size": 2000,
         "valid_size": 1000,
+        "farm_windows": [501, 751, 1001, 1251, 1501]
     },
     "ETTh2": {
         "target_ts": "OT",
@@ -16,6 +17,7 @@ ts_metadata = {
         "freq": "h",
         "test_size": 2000,
         "valid_size": 1000,
+        "farm_windows": [501, 751, 1001, 1251, 1501]
     },
     "ETTm1": {
         "target_ts": "OT",
@@ -23,6 +25,7 @@ ts_metadata = {
         "freq": "min",
         "test_size": 2000,
         "valid_size": 1000,
+        "farm_windows": [501, 751, 1001, 1251, 1501]
     },
     "ETTm2": {
         "target_ts": "OT",
@@ -30,6 +33,7 @@ ts_metadata = {
         "freq": "min",
         "test_size": 2000,
         "valid_size": 1000,
+        "farm_windows": [501, 751, 1001, 1251, 1501]
     },
     "Weather" : {
         "target_ts": "OT",
@@ -37,6 +41,7 @@ ts_metadata = {
         "freq": "10min",
         "test_size": 2000,
         "valid_size": 1000,
+        "farm_windows": [501, 751, 1001, 1251, 1501]
     },
     "TrafficL" : {
         "target_ts": "OT",
@@ -44,5 +49,14 @@ ts_metadata = {
         "freq": "h",
         "test_size": 2000,
         "valid_size": 1000,
+        "farm_windows": [501, 751, 1001, 1251, 1501]
+    },
+    "ECL" : {
+        "target_ts": "OT",
+        "exog_list": list(range(319+1)),
+        "freq": "15min",
+        "test_size": 2000,
+        "valid_size": 1000,
+        "farm_windows": [501, 751, 1001, 1251, 1501]
     }
 }
