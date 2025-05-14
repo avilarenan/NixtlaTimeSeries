@@ -31,8 +31,8 @@ def process_farm(farm_params):
     '''
     df_raw = farm_params["df_raw"]
     window = farm_params["window"]
-    exogenous_feature = farm_params["exogenous_feature"]
-    target_feature = farm_params["target_feature"]
+    exogenous_feature = str(farm_params["exogenous_feature"])
+    target_feature = str(farm_params["target_feature"])
     ret = farm(
         refTS=df_raw[target_feature].values,
         qryTS=df_raw[str(exogenous_feature)].values,
@@ -41,7 +41,7 @@ def process_farm(farm_params):
         fuzzyc=[1]
     )["qts_shaped"]
 
-    return ret, exogenous_feature
+    return {"shaped" : ret}, exogenous_feature
 
 def process_rollcorr(params):
     '''
@@ -55,38 +55,20 @@ def process_rollcorr(params):
     '''
     df_raw = params["df_raw"]
     window = params["window"]
-    exogenous_feature = params["exogenous_feature"]
-    target_feature = params["target_feature"]
+    exogenous_feature = str(params["exogenous_feature"])
+    target_feature = str(params["target_feature"])
     saliency = df_raw[target_feature].rolling(window).corr(df_raw[str(exogenous_feature)])
     
     shaping_ratio = (saliency-saliency.min())/(saliency.max() - saliency.min()) # normalizing between 0 and 1
+    shaping_ratio_inverted = (shaping_ratio - 1).abs() # NOTE: INVERTING
+
     shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    ret = df_raw[str(exogenous_feature)][window:] * shaping_ratio
+    shaping_ratio_inverted = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
 
-    return ret, exogenous_feature
+    ret = df_raw[str(exogenous_feature)] * shaping_ratio
+    ret_inverted = df_raw[str(exogenous_feature)] * shaping_ratio_inverted
 
-def process_rollcorr_inverted(params):
-    '''
-    INVERTED CORRELATION SHAPING
-    params = {
-        "df_raw" : df_raw,
-        "window" : window,
-        "exogenous_feature": feature,
-        "target_feature": target
-    }
-    '''
-    df_raw = params["df_raw"]
-    window = params["window"]
-    exogenous_feature = params["exogenous_feature"]
-    target_feature = params["target_feature"]
-    saliency = df_raw[target_feature].rolling(window).corr(df_raw[str(exogenous_feature)])
-    
-    shaping_ratio = (saliency-saliency.min())/(saliency.max() - saliency.min()) # normalizing between 0 and 1
-    shaping_ratio = (shaping_ratio - 1).abs() # NOTE: INVERTING
-    shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    ret = df_raw[str(exogenous_feature)][window:] * shaping_ratio
-
-    return ret, exogenous_feature
+    return {"shaped" : ret, "inverted_shaped": ret_inverted}, exogenous_feature
 
 def process_rollcov(params):
     '''
@@ -100,38 +82,20 @@ def process_rollcov(params):
     '''
     df_raw = params["df_raw"]
     window = params["window"]
-    exogenous_feature = params["exogenous_feature"]
-    target_feature = params["target_feature"]
+    exogenous_feature = str(params["exogenous_feature"])
+    target_feature = str(params["target_feature"])
     saliency = df_raw[target_feature].rolling(window).cov(df_raw[str(exogenous_feature)])
 
     shaping_ratio = (saliency-saliency.min())/(saliency.max() - saliency.min()) # normalizing between 0 and 1
+    shaping_ratio_inverted = (shaping_ratio - 1).abs() # NOTE: INVERTING
+
     shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    ret = df_raw[str(exogenous_feature)][window:] * shaping_ratio
+    shaping_ratio_inverted = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
 
-    return ret, exogenous_feature
+    ret = df_raw[str(exogenous_feature)] * shaping_ratio
+    ret_inverted = df_raw[str(exogenous_feature)] * shaping_ratio_inverted
 
-def process_rollcov_inverted(params):
-    '''
-    COVARIANCE SHAPING
-    params = {
-        "df_raw" : df_raw,
-        "window" : window,
-        "exogenous_feature": feature,
-        "target_feature": target
-    }
-    '''
-    df_raw = params["df_raw"]
-    window = params["window"]
-    exogenous_feature = params["exogenous_feature"]
-    target_feature = params["target_feature"]
-    saliency = df_raw[target_feature].rolling(window).cov(df_raw[str(exogenous_feature)])
-
-    shaping_ratio = (saliency-saliency.min())/(saliency.max() - saliency.min()) # normalizing between 0 and 1
-    shaping_ratio = (shaping_ratio - 1).abs() # NOTE: INVERTING
-    shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    ret = df_raw[str(exogenous_feature)][window:] * shaping_ratio
-
-    return ret, exogenous_feature
+    return {"shaped" : ret, "inverted_shaped": ret_inverted}, exogenous_feature
 
 def process_entropy(params):
     '''
@@ -145,8 +109,8 @@ def process_entropy(params):
     '''
     df_raw = params["df_raw"]
     window = params["window"]
-    exogenous_feature = params["exogenous_feature"]
-    target_feature = params["target_feature"]
+    exogenous_feature = str(params["exogenous_feature"])
+    target_feature = str(params["target_feature"])
 
     target_values, _ = coalesce_series(df_raw[target_feature].values)
     exogenous_values, _ = coalesce_series(df_raw[exogenous_feature].values)
@@ -158,41 +122,15 @@ def process_entropy(params):
     saliency = pd.Series([np.nan]*(window-1) + list(result))
 
     shaping_ratio = (saliency-saliency.min())/(saliency.max() - saliency.min()) # normalizing between 0 and 1
+    shaping_ratio_inverted = (shaping_ratio - 1).abs() # NOTE: INVERTING
+
     shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
+    shaping_ratio_inverted = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
+
     ret = df_raw[str(exogenous_feature)] * shaping_ratio
+    ret_inverted = df_raw[str(exogenous_feature)] * shaping_ratio_inverted
 
-    return ret, exogenous_feature
-
-def process_entropy_inverted(params):
-    '''
-    RELATIVE ENTROPY SHAPING
-    params = {
-        "df_raw" : df_raw,
-        "window" : window,
-        "exogenous_feature": feature,
-        "target_feature": target
-    }
-    '''
-    df_raw = params["df_raw"]
-    window = params["window"]
-    exogenous_feature = params["exogenous_feature"]
-    target_feature = params["target_feature"]
-
-    target_values, _ = coalesce_series(df_raw[target_feature].values)
-    exogenous_values, _ = coalesce_series(df_raw[exogenous_feature].values)
-
-    target_windows = sliding_window_view(target_values, window_shape=window)
-    exogenous_windows = sliding_window_view(exogenous_values, window_shape=window)
-
-    result = np.array([relative_entropy(a, b) for a, b in zip(target_windows, exogenous_windows)])
-    saliency = pd.Series([np.nan]*(window-1) + list(result))
-
-    shaping_ratio = (saliency-saliency.min())/(saliency.max() - saliency.min()) # normalizing between 0 and 1
-    shaping_ratio = (shaping_ratio - 1).abs() # NOTE: INVERTING
-    shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    ret = df_raw[str(exogenous_feature)] * shaping_ratio
-
-    return ret, exogenous_feature
+    return {"shaped" : ret, "inverted_shaped": ret_inverted}, exogenous_feature
 
 def process_mutual_info(params):
     '''
@@ -206,8 +144,8 @@ def process_mutual_info(params):
     '''
     df_raw = params["df_raw"]
     window = params["window"]
-    exogenous_feature = params["exogenous_feature"]
-    target_feature = params["target_feature"]
+    exogenous_feature = str(params["exogenous_feature"])
+    target_feature = str(params["target_feature"])
 
     target_values, _ = coalesce_series(df_raw[target_feature].values)
     exogenous_values, _ = coalesce_series(df_raw[exogenous_feature].values)
@@ -219,71 +157,15 @@ def process_mutual_info(params):
     saliency = pd.Series([np.nan]*(window-1) + list(result))
 
     shaping_ratio = (saliency-saliency.min())/(saliency.max() - saliency.min()) # normalizing between 0 and 1
+    shaping_ratio_inverted = (shaping_ratio - 1).abs() # NOTE: INVERTING
+
     shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
+    shaping_ratio_inverted = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
+
     ret = df_raw[str(exogenous_feature)] * shaping_ratio
+    ret_inverted = df_raw[str(exogenous_feature)] * shaping_ratio_inverted
 
-    return ret, exogenous_feature
-
-def process_mutual_info(params):
-    '''
-    MUTUAL INFORMATION SHAPING
-    params = {
-        "df_raw" : df_raw,
-        "window" : window,
-        "exogenous_feature": feature,
-        "target_feature": target
-    }
-    '''
-    df_raw = params["df_raw"]
-    window = params["window"]
-    exogenous_feature = params["exogenous_feature"]
-    target_feature = params["target_feature"]
-
-    target_values, _ = coalesce_series(df_raw[target_feature].values)
-    exogenous_values, _ = coalesce_series(df_raw[exogenous_feature].values)
-
-    target_windows = sliding_window_view(target_values, window_shape=window)
-    exogenous_windows = sliding_window_view(exogenous_values, window_shape=window)
-
-    result = np.array([mutual_info(a, b) for a, b in zip(target_windows, exogenous_windows)])
-    saliency = pd.Series([np.nan]*(window-1) + list(result))
-
-    shaping_ratio = (saliency-saliency.min())/(saliency.max() - saliency.min()) # normalizing between 0 and 1
-    shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    ret = df_raw[str(exogenous_feature)] * shaping_ratio
-
-    return ret, exogenous_feature
-
-def process_mutual_info_inverted(params):
-    '''
-    MUTUAL INFORMATION SHAPING
-    params = {
-        "df_raw" : df_raw,
-        "window" : window,
-        "exogenous_feature": feature,
-        "target_feature": target
-    }
-    '''
-    df_raw = params["df_raw"]
-    window = params["window"]
-    exogenous_feature = params["exogenous_feature"]
-    target_feature = params["target_feature"]
-
-    target_values, _ = coalesce_series(df_raw[target_feature].values)
-    exogenous_values, _ = coalesce_series(df_raw[exogenous_feature].values)
-
-    target_windows = sliding_window_view(target_values, window_shape=window)
-    exogenous_windows = sliding_window_view(exogenous_values, window_shape=window)
-
-    result = np.array([mutual_info(a, b) for a, b in zip(target_windows, exogenous_windows)])
-    saliency = pd.Series([np.nan]*(window-1) + list(result))
-
-    shaping_ratio = (saliency-saliency.min())/(saliency.max() - saliency.min()) # normalizing between 0 and 1
-    shaping_ratio = (shaping_ratio - 1).abs() # NOTE: INVERTING
-    shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    ret = df_raw[str(exogenous_feature)] * shaping_ratio
-
-    return ret, exogenous_feature
+    return {"shaped" : ret, "inverted_shaped": ret_inverted}, exogenous_feature
 
 def process_dtw(params):
     '''
@@ -297,8 +179,8 @@ def process_dtw(params):
     '''
     df_raw = params["df_raw"]
     window = params["window"]
-    exogenous_feature = params["exogenous_feature"]
-    target_feature = params["target_feature"]
+    exogenous_feature = str(params["exogenous_feature"])
+    target_feature = str(params["target_feature"])
 
     target_values = df_raw[target_feature].values
     exogenous_values = df_raw[exogenous_feature].values
@@ -307,7 +189,7 @@ def process_dtw(params):
     exogenous_windows = sliding_window_view(exogenous_values, window_shape=window)
 
     dtw_dists = []
-    for a, b in tqdm(zip(target_windows, exogenous_windows), total=len(target_windows), desc="DTWing", leave=True):
+    for a, b in zip(target_windows, exogenous_windows):
         a = np.array(a, dtype=np.double)
         b = np.array(b, dtype=np.double)
         dtw_dist = dtw.distance_fast(a, b, use_pruning=True)
@@ -318,46 +200,12 @@ def process_dtw(params):
     saliency = pd.Series([np.nan]*(window-1) + list(result))
 
     shaping_ratio = (saliency-saliency.min())/(saliency.max() - saliency.min()) # normalizing between 0 and 1
+    shaping_ratio_inverted = (shaping_ratio - 1).abs() # NOTE: INVERTING
+
     shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
+    shaping_ratio_inverted = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
+
     ret = df_raw[str(exogenous_feature)] * shaping_ratio
+    ret_inverted = df_raw[str(exogenous_feature)] * shaping_ratio_inverted
 
-    return ret, exogenous_feature
-
-def process_dtw_inverted(params):
-    '''
-    DTW DISTANCE SHAPING
-    params = {
-        "df_raw" : df_raw,
-        "window" : window,
-        "exogenous_feature": feature,
-        "target_feature": target
-    }
-    '''
-    df_raw = params["df_raw"]
-    window = params["window"]
-    exogenous_feature = params["exogenous_feature"]
-    target_feature = params["target_feature"]
-
-    target_values = df_raw[target_feature].values
-    exogenous_values = df_raw[exogenous_feature].values
-
-    target_windows = sliding_window_view(target_values, window_shape=window)
-    exogenous_windows = sliding_window_view(exogenous_values, window_shape=window)
-
-    dtw_dists = []
-    for a, b in tqdm(zip(target_windows, exogenous_windows), total=len(target_windows), desc="DTWing", leave=True):
-        a = np.array(a, dtype=np.double)
-        b = np.array(b, dtype=np.double)
-        dtw_dist = dtw.distance_fast(a, b, use_pruning=True)
-        dtw_dists += [dtw_dist]
-
-    result = np.array(dtw_dists)
-    
-    saliency = pd.Series([np.nan]*(window-1) + list(result))
-
-    shaping_ratio = (saliency-saliency.min())/(saliency.max() - saliency.min()) # normalizing between 0 and 1
-    shaping_ratio = (shaping_ratio - 1).abs() # NOTE: INVERTING
-    shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    ret = df_raw[str(exogenous_feature)] * shaping_ratio
-
-    return ret, exogenous_feature
+    return {"shaped" : ret, "inverted_shaped": ret_inverted}, exogenous_feature
