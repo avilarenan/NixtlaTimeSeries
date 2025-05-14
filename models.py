@@ -23,7 +23,7 @@ def get_nf(horizon, lookback, freq, exog_list=[], num_samples=5, backend="optuna
                 backend=backend,
                 loss=MAE(),
                 config=general_config(
-                    horizon=horizon,
+                    # horizon=horizon,
                     input_size=lookback,
                     exog_list=exog_list,
                     model_name=_model.__name__

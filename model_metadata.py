@@ -12,15 +12,15 @@ def config_model_generator(horizon, model_class, n_series=None, additional_optio
         return config
     return config
 
-def general_config(horizon, input_size, exog_list, model_name):
+def general_config(input_size, exog_list, model_name):
 
     def ret(trial):
 
         def config_generic(trial):
             return {
-                "horizon": horizon,
+                # "horizon": horizon,
                 "input_size": input_size,
-                "exog_list": exog_list,
+                "hist_exog_list": exog_list,
                 # "loss": MAE(),
                 "max_steps": 2000,
                 "batch_size": 1,

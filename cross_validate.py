@@ -22,18 +22,18 @@ LOOKBACK = 96
 NUM_SAMPLES = 20
 
 datasets = [
-    "TrafficL",
     "ETTh1",
     "ETTh2",
     "ETTm1",
     "ETTm2",
     "Weather",
     "ECL",
+    "TrafficL",
 ]
 
 for horizon in tqdm(HORIZONS):
     for dataset_name in tqdm(datasets):
-        print(f"Running dataset {dataset_name}")
+        print(f"Running dataset {dataset_name} | Horizon: {horizon}")
         exog_list = ts_metadata[dataset_name]["exog_list"]
         target_ts = ts_metadata[dataset_name]["target_ts"]
         freq = ts_metadata[dataset_name]["freq"]
@@ -41,8 +41,8 @@ for horizon in tqdm(HORIZONS):
         test_size = ts_metadata[dataset_name]["test_size"]
         valid_size = ts_metadata[dataset_name]["valid_size"]
 
-        # df = pd.read_parquet(f"./processed_data/{dataset_name}.parquet")
-        df = pd.read_csv(f"./processed_data/{dataset_name}.csv")
+        df = pd.read_parquet(f"./processed_data/{dataset_name}.parquet")
+        # df = pd.read_csv(f"./processed_data/{dataset_name}.csv")
         df["ds"] = pd.to_datetime(df["ds"])
 
         # nf = NeuralForecast.load(path=f'./saved_models/{dataset_name}')
@@ -56,7 +56,7 @@ for horizon in tqdm(HORIZONS):
             backend="optuna"
         )
 
-        cv_df = nf.cross_validation(df=df, val_size=valid_size, test_size=test_size, step_size=1, n_windows=None)
+        cv_df = nf.cross_validation(df=df, val_size=valid_size, test_size=test_size, step_size=1, n_windows=None, verbose=True)
 
         cv_df.columns = cv_df.columns.str.replace('-median', '')
 
