@@ -29,7 +29,7 @@ def get_nf(horizon, lookback, freq, exog_list=[], num_samples=5, backend="optuna
                     model_name=_model.__name__
                 ),
                 num_samples=num_samples
-            ) for _model in [AutoLSTM, AutoNHITS, AutoTFT, AutoMLP, AutoNBEATSx, AutoTiDE, AutoBiTCN, AutoDeepNPTS]
+            ) for _model in [AutoTiDE, AutoBiTCN, AutoDeepNPTS, AutoLSTM, AutoNHITS, AutoTFT, AutoMLP, AutoNBEATSx]
         ]
 
         return NeuralForecast(models=models, freq=freq)

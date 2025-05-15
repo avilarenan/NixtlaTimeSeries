@@ -2,9 +2,10 @@ import logging
 logging.getLogger('pytorch_lightning').setLevel(logging.ERROR)
 from tqdm import tqdm
 
+from pathlib import Path
+
 import warnings
 warnings.filterwarnings('ignore')
-import os
 
 from datasets_metadata import ts_metadata
 import pandas as pd
@@ -62,11 +63,29 @@ for horizon in tqdm(HORIZONS):
 
         evaluation_df = evaluate(cv_df.drop(columns='cutoff'), metrics=[mse, mae, rmse, mape, smape])
         evaluation_df['best_model'] = evaluation_df.drop(columns=['metric', 'unique_id']).idxmin(axis=1)
-        evaluation_df.to_csv(f"./results/horizon{horizon}/{dataset_name}.csv", index=False)
 
-        nf.save(
-            path=f"./saved_models/{dataset_name}_h{horizon}.csv",
-            model_index=None,
-            overwrite=True,
-            save_dataset=True
-        )
+        try:
+
+            Path(f"./results/horizon{horizon}/").mkdir(parents=True, exist_ok=True)
+            evaluation_df.to_csv(f"./results/horizon{horizon}/{dataset_name}.csv", index=False)
+        except Exception as e:
+            print(e)
+            evaluation_df.to_csv(f"h{horizon}_{dataset_name}.csv", index=False)
+
+
+        try:
+            Path(f"./saved_models/{dataset_name}_h{horizon}/").mkdir(parents=True, exist_ok=True)
+            nf.save(
+                path=f"./saved_models/{dataset_name}_h{horizon}/",
+                model_index=None,
+                overwrite=True,
+                save_dataset=True
+            )
+        except Exception as e:
+            print(e)
+            nf.save(
+                path=f"./saved_models/",
+                model_index=None,
+                overwrite=True,
+                save_dataset=True
+            )

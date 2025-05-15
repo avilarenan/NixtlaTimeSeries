@@ -157,8 +157,8 @@ def general_config(input_size, exog_list, model_name):
                     "temporal_width",
                     [4, 8, 16]
                 ),
-                "layer_norm" : trial.suggest_categorical(
-                    "layer_norm",
+                "layernorm" : trial.suggest_categorical(
+                    "layernorm",
                     [True, False]
                 ),
             })
