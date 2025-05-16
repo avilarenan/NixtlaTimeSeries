@@ -27,9 +27,9 @@ def get_results():
 
     return pd.concat(list_dfs_reshaping)
 
-def get_enhancement(df):
+def get_enhancement(df, shaping_technique):
 
-    df_shaped = df[df["unique_id"].str.contains("shape")]
+    df_shaped = df[df["unique_id"] == shaping_technique]
     df_raw = df[df["unique_id"].str.contains("raw")]
 
     df_shaped = df_shaped.set_index(["dataset_name", "model", "horizon", "metric"])

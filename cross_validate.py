@@ -65,7 +65,6 @@ for horizon in tqdm(HORIZONS):
         evaluation_df['best_model'] = evaluation_df.drop(columns=['metric', 'unique_id']).idxmin(axis=1)
 
         try:
-
             Path(f"./results/horizon{horizon}/").mkdir(parents=True, exist_ok=True)
             evaluation_df.to_csv(f"./results/horizon{horizon}/{dataset_name}.csv", index=False)
         except Exception as e:

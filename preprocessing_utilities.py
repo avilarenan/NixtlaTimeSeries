@@ -3,7 +3,6 @@ from tqdm.notebook import tqdm
 
 from PyFARM import farm
 
-from fastdtw import fastdtw
 from dtaidistance import dtw
 
 from scipy.spatial.distance import euclidean
@@ -63,7 +62,7 @@ def process_rollcorr(params):
     shaping_ratio_inverted = (shaping_ratio - 1).abs() # NOTE: INVERTING
 
     shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    shaping_ratio_inverted = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
+    shaping_ratio_inverted = shaping_ratio_inverted.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
 
     ret = df_raw[str(exogenous_feature)] * shaping_ratio
     ret_inverted = df_raw[str(exogenous_feature)] * shaping_ratio_inverted
@@ -90,7 +89,7 @@ def process_rollcov(params):
     shaping_ratio_inverted = (shaping_ratio - 1).abs() # NOTE: INVERTING
 
     shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    shaping_ratio_inverted = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
+    shaping_ratio_inverted = shaping_ratio_inverted.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
 
     ret = df_raw[str(exogenous_feature)] * shaping_ratio
     ret_inverted = df_raw[str(exogenous_feature)] * shaping_ratio_inverted
@@ -125,7 +124,7 @@ def process_entropy(params):
     shaping_ratio_inverted = (shaping_ratio - 1).abs() # NOTE: INVERTING
 
     shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    shaping_ratio_inverted = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
+    shaping_ratio_inverted = shaping_ratio_inverted.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
 
     ret = df_raw[str(exogenous_feature)] * shaping_ratio
     ret_inverted = df_raw[str(exogenous_feature)] * shaping_ratio_inverted
@@ -160,7 +159,7 @@ def process_mutual_info(params):
     shaping_ratio_inverted = (shaping_ratio - 1).abs() # NOTE: INVERTING
 
     shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    shaping_ratio_inverted = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
+    shaping_ratio_inverted = shaping_ratio_inverted.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
 
     ret = df_raw[str(exogenous_feature)] * shaping_ratio
     ret_inverted = df_raw[str(exogenous_feature)] * shaping_ratio_inverted
@@ -203,7 +202,7 @@ def process_dtw(params):
     shaping_ratio_inverted = (shaping_ratio - 1).abs() # NOTE: INVERTING
 
     shaping_ratio = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
-    shaping_ratio_inverted = shaping_ratio.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
+    shaping_ratio_inverted = shaping_ratio_inverted.fillna(1) # NOTE: keep as it is if we can't calculate a ratio (NaN case)
 
     ret = df_raw[str(exogenous_feature)] * shaping_ratio
     ret_inverted = df_raw[str(exogenous_feature)] * shaping_ratio_inverted

@@ -14,7 +14,11 @@ st.title("Results")
 
 df = get_results()
 
-df_comp = get_enhancement(df)
+shaping_techniques = df["unique_id"].unique()
+
+shaping_technique = st.selectbox("Shaping_technique", shaping_techniques)
+
+df_comp = get_enhancement(df, shaping_technique)
 
 col1, col2, col3 = st.columns(3)
 with col1:
