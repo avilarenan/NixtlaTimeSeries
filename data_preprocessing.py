@@ -2,8 +2,7 @@ import warnings
 from datasetsforecast.long_horizon2 import LongHorizon2
 # from datasetsforecast.long_horizon import LongHorizon
 import pandas as pd
-pd.options.plotting.backend = "plotly"
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 from joblib import Parallel, delayed
 import joblib
 from datasets_metadata import ts_metadata
@@ -15,12 +14,12 @@ PLOT = False
 PARALLEL = True
 datasets_names = [
     "ETTh1",
-    "ETTh2",
-    "ETTm1",
-    "ETTm2",
-    "Weather",
-    "ECL",
-    "TrafficL"
+    # "ETTh2",
+    # "ETTm1",
+    # "ETTm2",
+    # "Weather",
+    # "ECL",
+    # "TrafficL"
 ]
 
 @contextlib.contextmanager
@@ -76,7 +75,7 @@ for dataset_name in tqdm(datasets_names, desc="Datasets"):
         process_rollcov,
         process_entropy,
         process_mutual_info,
-        process_dtw,
+        # process_dtw,
     ]
     
     list_of_processed_dfs = []
@@ -101,7 +100,6 @@ for dataset_name in tqdm(datasets_names, desc="Datasets"):
                 tqdm_it = tqdm(desc="Parallel Feature engineering processing", total=len(rolling_stats_params_list), leave=False)
                 with tqdm_joblib(tqdm_it) as progress_bar:
                     results_processed = Parallel(n_jobs=-1)(delayed(process_fn)(param) for param in rolling_stats_params_list)
-                tqdm_it.container.close()
             else:
                 # SEQUENTIAL PROCESSING
                 results_processed = []

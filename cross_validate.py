@@ -17,19 +17,31 @@ from neuralforecast import NeuralForecast
 
 from models import get_nf
 
-HORIZONS = [96, 192, 336, 720]
+HORIZONS = [
+    96,
+    # 192,
+    # 336,
+    # 720
+]
 LOOKBACK = 96
-
 NUM_SAMPLES = 20
+ACCURACY_METRICS_TO_EVALUATE = [
+    mse,
+    # mae,
+    # rmse,
+    # mape,
+    # smape
+]
+
 
 datasets = [
     "ETTh1",
-    "ETTh2",
-    "ETTm1",
-    "ETTm2",
-    "Weather",
-    "ECL",
-    "TrafficL",
+    # "ETTh2",
+    # "ETTm1",
+    # "ETTm2",
+    # "Weather",
+    # "ECL",
+    # "TrafficL",
 ]
 
 for horizon in tqdm(HORIZONS):
@@ -61,7 +73,7 @@ for horizon in tqdm(HORIZONS):
 
         cv_df.columns = cv_df.columns.str.replace('-median', '')
 
-        evaluation_df = evaluate(cv_df.drop(columns='cutoff'), metrics=[mse, mae, rmse, mape, smape])
+        evaluation_df = evaluate(cv_df.drop(columns='cutoff'), metrics=ACCURACY_METRICS_TO_EVALUATE)
         evaluation_df['best_model'] = evaluation_df.drop(columns=['metric', 'unique_id']).idxmin(axis=1)
 
         try:

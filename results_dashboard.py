@@ -10,6 +10,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+value_column_config={
+    "value": st.column_config.NumberColumn(
+        "Value",
+        help="Value",
+        step=1e-10,
+    )
+}
+
 st.title("Results")
 
 df = get_results()
@@ -20,10 +28,12 @@ shaping_technique = st.selectbox("Shaping_technique", shaping_techniques)
 
 df_comp = get_enhancement(df, shaping_technique)
 
+
+
 col1, col2, col3 = st.columns(3)
 with col1:
     st.write("Original")
-    st.write(df)
+    st.dataframe(df.round(10), column_config=value_column_config)
 with col2:
     st.write("Enhancement")
     st.write(df_comp)

@@ -1,4 +1,26 @@
 from neuralforecast.losses.pytorch import MAE, MSE, RMSE, MAPE, SMAPE
+from neuralforecast.models import MLP, LSTM, NHITS, TFT, NBEATSx, TiDE, TSMixerx, BiTCN, DeepNPTS
+
+def get_fixed_hyper_parameter_model(model_name, horizon, hist_exog_list, lookback):
+    if model_name == "TiDE":
+        return TiDE(
+            h=horizon,
+            input_size=lookback,
+            loss=MSE(),
+            num_encoder_layers=2,
+            num_decoder_layers=2,
+            windows_batch_size=512,
+            max_steps=100,
+            dropout=0.3,
+            learning_rate=0.1,
+            early_stop_patience_steps=5,
+            temporal_decoder_dim=256,
+            decoder_output_dim=8,
+            hist_exog_list=hist_exog_list,
+        )
+    else:
+        raise Exception(f"Model {model_name} not implemented.")
+
 
 def config_model_generator(horizon, model_class, n_series=None, additional_options={}, backend="optuna"):
     def config(trial):

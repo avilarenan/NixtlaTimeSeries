@@ -68,8 +68,6 @@ app.layout = html.Div([
 
 ])
 
-df = pd.read_parquet("./processed_data/ETTh2.parquet")
-
 @callback(
     Output("exogenous-dropdown", 'options'),
     Output("unique-id-dropdown", 'options'),

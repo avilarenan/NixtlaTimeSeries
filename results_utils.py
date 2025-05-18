@@ -1,6 +1,8 @@
 import pandas as pd
 from pathlib import Path
+from models import models_list
 
+model_names = [_model.__name__ for _model in models_list]
 
 def get_results():
     results = []
@@ -19,7 +21,7 @@ def get_results():
 
     list_dfs_reshaping = []
     basics = ["unique_id", "metric", "dataset_name", "horizon"]
-    for column in ["AutoLSTM", "AutoMLP", "AutoNHITS", "AutoTFT", "AutoNBEATSx", "AutoTiDE", "AutoBiTCN", "AutoDeepNPTS"]:
+    for column in model_names:
         df_tmp = df[basics + [column]]
         df_tmp = df_tmp.rename({column: "value"}, axis=1)
         df_tmp["model"] = column
