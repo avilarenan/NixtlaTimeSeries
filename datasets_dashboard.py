@@ -4,7 +4,7 @@ from dash import Dash, Input, Output, callback_context, dcc, html, no_update
 import dash_bootstrap_components as dbc
 import pandas as pd
 from pathlib import Path
-from dash import Dash, dcc, html, Input, Output,callback
+from dash import Dash, dcc, html, Input, Output,callback, dash_table
 
 def get_datasets():
     datasets_path = []
@@ -64,8 +64,8 @@ app.layout = html.Div([
     # dcc.Dropdown(available_exogenous, id="exogenous-dropdown2"),
     # dcc.Dropdown(available_unique_ids, id="unique-id-dropdown3"),
     # dcc.Dropdown(available_exogenous, id="exogenous-dropdown3"),
-    dcc.Graph(id="main-graph", style={'width': '100vw', 'height': '800px'})
-
+    dcc.Graph(id="main-graph", style={'width': '100vw', 'height': '800px'}),
+    dash_table.DataTable(id="data-table")
 ])
 
 @callback(
@@ -75,6 +75,8 @@ app.layout = html.Div([
     Output("unique-id-dropdown2", 'options'),
     Output("exogenous-dropdown3", 'options'),
     Output("unique-id-dropdown3", 'options'),
+    Output('data-table', 'data'),
+    Output('data-table', 'columns'),
     Input('datasets-dropdown', 'value'),
 )
 def update_chosen_datasets(value):
@@ -82,7 +84,10 @@ def update_chosen_datasets(value):
     print(f"./{value}")
     df = pd.read_parquet(f"./{value}")
 
-    return df.columns, df["unique_id"].unique(), df.columns, df["unique_id"].unique(), df.columns, df["unique_id"].unique()
+    columns = [{'name': col, 'id': col} for col in df.columns]
+    data = df.to_dict(orient='records')
+
+    return df.columns, df["unique_id"].unique(), df.columns, df["unique_id"].unique(), df.columns, df["unique_id"].unique(), data, columns
 
 @callback(
     Output('main-graph', 'figure'),

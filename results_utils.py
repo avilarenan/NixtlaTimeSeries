@@ -1,8 +1,5 @@
 import pandas as pd
 from pathlib import Path
-from models import models_list
-
-model_names = [_model.__name__ for _model in models_list]
 
 def get_results():
     results = []
@@ -17,6 +14,9 @@ def get_results():
         results += [df]
 
     df = pd.concat(results)
+
+    model_names = df["best_model"].unique().tolist()
+
     df = df.drop("best_model", axis=1)
 
     list_dfs_reshaping = []

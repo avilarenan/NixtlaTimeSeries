@@ -24,7 +24,8 @@ HORIZONS = [
     # 720
 ]
 LOOKBACK = 96
-NUM_SAMPLES = 20
+NUM_SAMPLES = 50
+AUTOMATIC_HYPERPARAM_TUNING = True
 ACCURACY_METRICS_TO_EVALUATE = [
     mse,
     # mae,
@@ -64,6 +65,7 @@ for horizon in tqdm(HORIZONS):
             horizon=horizon,
             lookback=LOOKBACK,
             freq=freq,
+            automatic_hyperparam_tuning=AUTOMATIC_HYPERPARAM_TUNING,
             exog_list=exog_list,
             num_samples=NUM_SAMPLES,
             backend="optuna"

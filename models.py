@@ -15,32 +15,38 @@ from ray import tune
 
 from neuralforecast.losses.pytorch import MAE, MSE, RMSE, MAPE, SMAPE
 
-AUTOMATIC_HYPERPARAMETER_TUNING = False
+def get_nf(
+    horizon,
+    lookback,
+    freq,
+    automatic_hyperparam_tuning,
+    exog_list=[],
+    num_samples=5,
+    backend="optuna", model_type="univariate"
+):
 
-models_list = [
-    AutoTiDE,
-    # AutoBiTCN,
-    # AutoDeepNPTS,
-    # AutoLSTM,
-    # AutoNHITS,
-    # AutoTFT,
-    # AutoMLP,
-    # AutoNBEATSx
-] if AUTOMATIC_HYPERPARAMETER_TUNING else [
-    TiDE,
-    # BiTCN,
-    # DeepNPTS,
-    # LSTM,
-    # NHITS,
-    # TFT,
-    # MLP,
-    # NBEATSx
-]
-
-def get_nf(horizon, lookback, freq, exog_list=[], num_samples=5, backend="optuna", model_type="univariate"):
+    models_list = [
+        AutoTiDE,
+        # AutoBiTCN,
+        # AutoDeepNPTS,
+        # AutoLSTM,
+        # AutoNHITS,
+        # AutoTFT,
+        # AutoMLP,
+        # AutoNBEATSx
+    ] if automatic_hyperparam_tuning else [
+        TiDE,
+        # BiTCN,
+        # DeepNPTS,
+        # LSTM,
+        # NHITS,
+        # TFT,
+        # MLP,
+        # NBEATSx
+    ]
 
     if model_type =="univariate":
-        if AUTOMATIC_HYPERPARAMETER_TUNING:
+        if automatic_hyperparam_tuning:
             models = [
                 _model(
                     h=horizon,
@@ -61,7 +67,8 @@ def get_nf(horizon, lookback, freq, exog_list=[], num_samples=5, backend="optuna
                     model_name=_model.__name__,
                     horizon=horizon,
                     hist_exog_list=exog_list,
-                    lookback=lookback
+                    lookback=lookback,
+                    loss=MSE(),
                 ) for _model in models_list
             ]
 

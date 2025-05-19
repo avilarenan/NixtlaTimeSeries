@@ -1,22 +1,24 @@
-from neuralforecast.losses.pytorch import MAE, MSE, RMSE, MAPE, SMAPE
 from neuralforecast.models import MLP, LSTM, NHITS, TFT, NBEATSx, TiDE, TSMixerx, BiTCN, DeepNPTS
 
-def get_fixed_hyper_parameter_model(model_name, horizon, hist_exog_list, lookback):
+def get_fixed_hyper_parameter_model(model_name, horizon, hist_exog_list, lookback, loss):
     if model_name == "TiDE":
         return TiDE(
             h=horizon,
             input_size=lookback,
-            loss=MSE(),
+            loss=loss,
+            layernorm=True,
             num_encoder_layers=2,
             num_decoder_layers=2,
-            windows_batch_size=512,
-            max_steps=100,
-            dropout=0.3,
+            batch_size=1,
+            windows_batch_size=1024, #512
+            max_steps=5000,
+            val_check_steps=100,
+            dropout=0.0,
             learning_rate=0.1,
             early_stop_patience_steps=5,
-            temporal_decoder_dim=256,
+            temporal_decoder_dim=512, # 256
             decoder_output_dim=8,
-            hist_exog_list=hist_exog_list,
+            # hist_exog_list=hist_exog_list,
         )
     else:
         raise Exception(f"Model {model_name} not implemented.")
@@ -40,13 +42,18 @@ def general_config(input_size, exog_list, model_name):
 
         def config_generic(trial):
             return {
-                # "horizon": horizon,
                 "input_size": input_size,
                 "hist_exog_list": exog_list,
-                # "loss": MAE(),
-                "max_steps": 2000,
+                "val_check_steps": trial.suggest_categorical(
+                    "val_check_steps",
+                    [1, 25, 50, 100, 200, 300, 500]
+                ),
+                "max_steps": 5000,
                 "batch_size": 1,
-                "windows_batch_size": 32,
+                "windows_batch_size": trial.suggest_categorical(
+                    "windows_batch_size",
+                    [16, 32, 64, 128, 256, 512, 1024, 2048]
+                ),
                 "scaler_type": "standard",
                 # TODO: add dropout?
                 "learning_rate": trial.suggest_float(             
@@ -55,11 +62,7 @@ def general_config(input_size, exog_list, model_name):
                     high=1e-1,
                     log=True,
                 ),
-                "random_seed": trial.suggest_int(
-                    "random_seed",
-                    low=1,
-                    high=20,
-                ),
+                "random_seed": 42,
                 "early_stop_patience_steps": trial.suggest_int(
                     "early_stop_patience_steps",
                     low=1,
@@ -165,7 +168,7 @@ def general_config(input_size, exog_list, model_name):
                 ),
                 "temporal_decoder_dim" : trial.suggest_categorical(
                     "temporal_decoder_dim",
-                    [32, 64, 128]
+                    [32, 64, 128, 256, 512]
                 ),
                 "num_encoder_layers" : trial.suggest_categorical(
                     "num_encoder_layers",

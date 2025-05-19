@@ -70,11 +70,11 @@ for dataset_name in tqdm(datasets_names, desc="Datasets"):
     ref_ts = "y"
 
     list_of_process_fns = [
-        process_farm,
-        process_rollcorr,
-        process_rollcov,
-        process_entropy,
-        process_mutual_info,
+        # process_farm,
+        # process_rollcorr,
+        # process_rollcov,
+        # process_entropy,
+        # process_mutual_info,
         # process_dtw,
     ]
     
@@ -133,9 +133,13 @@ for dataset_name in tqdm(datasets_names, desc="Datasets"):
             if not skip_inverted:
                 df_processed_inverted["unique_id"] = f"{target_ts}_w{window}_exogenous_{process_fn.__name__}_inverted"
                 list_of_processed_dfs += [df_processed_inverted]
-        
-    df_processed = pd.concat(list_of_processed_dfs)
+    
+    if len(list_of_processed_dfs) > 0:
+        df_processed = pd.concat(list_of_processed_dfs)
+        df = pd.concat([df_raw, df_processed])
+    else:
+        df = df_raw
 
-    df = pd.concat([df_raw, df_processed])
+    
     # df.to_csv(f"./processed_data/{dataset_name}.csv", index=False)
     df.to_parquet(f"./processed_data/{dataset_name}.parquet", index=False)
