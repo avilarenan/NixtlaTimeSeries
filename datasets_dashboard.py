@@ -28,7 +28,14 @@ fig = FigureResampler()
 app.layout = html.Div([
     html.H1("Datasets inspector"),
     html.Br(),
-    dcc.Dropdown(available_datasets, value=available_datasets[0], id='datasets-dropdown'),
+    dbc.Row([
+        dbc.Col([
+            dcc.Dropdown(available_datasets, value=available_datasets[0], id='datasets-dropdown'),
+        ]),
+        dbc.Col([
+            html.H3("No data yet", id="dataset-size-info")
+        ])
+    ]),
     html.Br(),
     dbc.Row(
         [
@@ -77,6 +84,7 @@ app.layout = html.Div([
     Output("unique-id-dropdown3", 'options'),
     Output('data-table', 'data'),
     Output('data-table', 'columns'),
+    Output("dataset-size-info", 'children'),
     Input('datasets-dropdown', 'value'),
 )
 def update_chosen_datasets(value):
@@ -87,7 +95,7 @@ def update_chosen_datasets(value):
     columns = [{'name': col, 'id': col} for col in df.columns]
     data = df.to_dict(orient='records')
 
-    return df.columns, df["unique_id"].unique(), df.columns, df["unique_id"].unique(), df.columns, df["unique_id"].unique(), data, columns
+    return df.columns, df["unique_id"].unique(), df.columns, df["unique_id"].unique(), df.columns, df["unique_id"].unique(), data, columns, f"Dataset size: {df.shape}"
 
 @callback(
     Output('main-graph', 'figure'),

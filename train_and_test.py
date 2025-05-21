@@ -1,9 +1,11 @@
 import logging
 logging.getLogger('pytorch_lightning').setLevel(logging.ERROR)
+from tqdm import tqdm
+
+from pathlib import Path
 
 import warnings
 warnings.filterwarnings('ignore')
-import os
 
 from datasets_metadata import ts_metadata
 import pandas as pd
@@ -15,68 +17,107 @@ from neuralforecast import NeuralForecast
 
 from models import get_nf
 
-datasets = [
-    # "ETTh1", 
-    # "ETTh2",
-    "ETTm1",
-    "ETTm2"
+HORIZONS = [
+    96,
+    # 192,
+    # 336,
+    # 720
+]
+LOOKBACK = 96
+NUM_SAMPLES = 50
+AUTOMATIC_HYPERPARAM_TUNING = False
+ACCURACY_METRICS_TO_EVALUATE = [
+    mse,
+    # mae,
+    # rmse,
+    # mape,
+    # smape
 ]
 
-for dataset_name in datasets:
-    print(f"Running dataset {dataset_name}")
-    exog_list = ts_metadata[dataset_name]["exog_list"]
-    target_ts = ts_metadata[dataset_name]["target_ts"]
-    freq = ts_metadata[dataset_name]["freq"]
 
-    test_size = ts_metadata[dataset_name]["test_size"]
-    valid_size = ts_metadata[dataset_name]["valid_size"]
+datasets = [
+    "ETTh1",
+    # "ETTh2",
+    # "ETTm1",
+    # "ETTm2",
+    # "Weather",
+    # "ECL",
+    # "TrafficL",
+]
 
-    df = pd.read_csv(f"./processed_data/{dataset_name}.csv")
-    df["ds"] = pd.to_datetime(df["ds"])
+for horizon in tqdm(HORIZONS):
+    for dataset_name in tqdm(datasets):
+        print(f"Running dataset {dataset_name} | Horizon: {horizon}")
+        exog_list = ts_metadata[dataset_name]["exog_list"]
+        target_ts = ts_metadata[dataset_name]["target_ts"]
+        freq = ts_metadata[dataset_name]["freq"]
 
-    # nf = NeuralForecast.load(path=f'./saved_models/{dataset_name}')
+        test_size = ts_metadata[dataset_name]["test_size"]
+        valid_size = ts_metadata[dataset_name]["valid_size"]
 
-    horizon = 96
-    lookback = 96
+        df_train = pd.read_parquet(f"./processed_data/{dataset_name}_train.parquet")
+        df_test = pd.read_parquet(f"./processed_data/{dataset_name}_test.parquet")
+        
+        df_train["ds"] = pd.to_datetime(df_train["ds"])
+        df_test["ds"] = pd.to_datetime(df_test["ds"])
 
-    nf = get_nf(
-        horizon=horizon,
-        lookback=lookback,
-        freq=freq,
-        exog_list=exog_list,
-        num_samples=20,
-        backend="optuna"
-    )
+        nf = get_nf(
+            horizon=horizon,
+            lookback=LOOKBACK,
+            freq=freq,
+            automatic_hyperparam_tuning=AUTOMATIC_HYPERPARAM_TUNING,
+            exog_list=exog_list,
+            num_samples=NUM_SAMPLES,
+            backend="optuna"
+        )
 
-    dataset_path = f"./processed_data/train/{dataset_name}"
-    files_list = [f"{dataset_path}/{dir}" for dir in os.listdir(dataset_path)]
+        nf.fit(
+            df=df_train,
+            val_size=valid_size,
+            verbose=True
+        )
 
-    nf.fit(df=files_list, val_size=valid_size)
+        fcst_df = nf.predict(
+            df=df_test,
+        )
 
-    nf.save(
-        path=f"./saved_models/{dataset_name}_h{horizon}.csv",
-        model_index=None,
-        overwrite=True,
-        save_dataset=False
-    )
+        fcst_df.columns = fcst_df.columns.str.replace('-median', '')
 
-    # nf = NeuralForecast.load(path=f'./saved_models/{dataset_name}')
+        print(fcst_df)
 
-    test_df = pd.read_csv(f"./processed_data/test/{dataset_name}.csv")
-    test_df["ds"] = pd.to_datetime(test_df["ds"])
-    
-    cv_df = nf.cross_validation(df=test_df, val_size=0, test_size=len(test_df), step_size=1, n_windows=None, prevent_retraining=True)
+        evaluation_df = evaluate(
+            fcst_df.merge(df_test[["unique_id", "ds", "y"]],on=['unique_id', 'ds']),
+            metrics=ACCURACY_METRICS_TO_EVALUATE,
+            agg_fn='mean'
+        )
 
-    cv_df.columns = cv_df.columns.str.replace('-median', '')
+        print(evaluation_df)
 
-    evaluation_df = evaluate(cv_df.drop(columns='cutoff'), metrics=[mse, mae, rmse, mape, smape])
-    evaluation_df['best_model'] = evaluation_df.drop(columns=['metric', 'unique_id']).idxmin(axis=1)
-    evaluation_df.to_csv(f"./results/{dataset_name}")
+        print(df_test)
 
-    nf.save(
-        path=f"./saved_models/{dataset_name}_h{horizon}.csv",
-        model_index=None,
-        overwrite=True,
-        save_dataset=True
-    )
+        evaluation_df['best_model'] = evaluation_df.drop(columns=['metric', 'unique_id']).idxmin(axis=1)
 
+        try:
+            Path(f"./results/horizon{horizon}/").mkdir(parents=True, exist_ok=True)
+            evaluation_df.to_csv(f"./results/horizon{horizon}/{dataset_name}.csv", index=False)
+        except Exception as e:
+            print(e)
+            evaluation_df.to_csv(f"h{horizon}_{dataset_name}.csv", index=False)
+
+
+        try:
+            Path(f"./saved_models/{dataset_name}_h{horizon}/").mkdir(parents=True, exist_ok=True)
+            nf.save(
+                path=f"./saved_models/{dataset_name}_h{horizon}/",
+                model_index=None,
+                overwrite=True,
+                save_dataset=True
+            )
+        except Exception as e:
+            print(e)
+            nf.save(
+                path=f"./saved_models/",
+                model_index=None,
+                overwrite=True,
+                save_dataset=True
+            )

@@ -5,11 +5,24 @@ from datasetsforecast.long_horizon2 import ETTh1, ETTh2, ETTm1, ETTm2, ECL, Traf
 ts_metadata = {
     "ETTh1": {
         "target_ts": "OT",
-        "exog_list": ['HUFL', 'HULL', 'MUFL', 'MULL', "LUFL", "LULL"],
+        "exog_list": [
+            'HUFL',
+            'HULL',
+            'MUFL',
+            'MULL',
+            "LUFL",
+            "LULL"
+        ],
         "freq": "h",
         "test_size": 2881,
         "valid_size": 2881,
-        "farm_windows": [501, 751, 1001, 1251, 1501]
+        "farm_windows": [
+            501,
+            # 751,
+            # 1001,
+            # 1251,
+            # 1501
+        ]
     },
     "ETTh2": {
         "target_ts": "OT",
