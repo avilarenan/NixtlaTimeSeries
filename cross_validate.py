@@ -13,7 +13,6 @@ import pandas as pd
 from utilsforecast.evaluation import evaluate
 from utilsforecast.losses import mse, mae, rmse, mape, smape
 from preprocessing_utilities import read_df_from_file, save_df_to_file
-from neuralforecast import NeuralForecast
 
 from models import get_nf
 
@@ -81,7 +80,7 @@ for horizon in tqdm(HORIZONS):
         if AUTOMATIC_HYPERPARAM_TUNING:
             for model in nf.models:
                 trials_df = model.results.trials_dataframe()
-                save_df_to_file(df=trials_df, path=f"{OUTPUT_RESULTS_PATH}/horizon{horizon}", filename=f"{model}_trials", format=".csv")
+                save_df_to_file(df=trials_df, path=f"{OUTPUT_RESULTS_PATH}/{dataset_name}/horizon{horizon}", filename=f"{model}_trials", format=".csv")
         else:
             base_folder = "saved_models_auto" if AUTOMATIC_HYPERPARAM_TUNING else "saved_models"
             Path(f"./{base_folder}/{dataset_name}_h{horizon}/").mkdir(parents=True, exist_ok=True)
@@ -91,6 +90,6 @@ for horizon in tqdm(HORIZONS):
                 overwrite=True,
                 save_dataset=True
             )
-
-        save_df_to_file(df=evaluation_df, path=f"{OUTPUT_RESULTS_PATH}/horizon{horizon}", filename=f"{dataset_name}_metrics", format=".csv")
-        save_df_to_file(df=cv_df, path=f"{OUTPUT_RESULTS_PATH}/horizon{horizon}", filename=f"{dataset_name}_pred", format=".parquet")
+        auto_label_str = "_auto" if AUTOMATIC_HYPERPARAM_TUNING else "" 
+        save_df_to_file(df=evaluation_df, path=f"{OUTPUT_RESULTS_PATH}/{dataset_name}/horizon{horizon}{auto_label_str}", filename=f"metrics", format=".csv")
+        save_df_to_file(df=cv_df, path=f"{OUTPUT_RESULTS_PATH}/{dataset_name}/horizon{horizon}{auto_label_str}", filename=f"pred", format=".parquet")

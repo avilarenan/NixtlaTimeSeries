@@ -1,8 +1,8 @@
 import logging
 
 from neuralforecast import NeuralForecast
-from neuralforecast.auto import AutoMLP, AutoLSTM, AutoNHITS, AutoTFT, AutoNBEATSx, AutoTiDE, AutoTSMixerx, AutoBiTCN, AutoDeepNPTS
-from neuralforecast.models import MLP, LSTM, NHITS, TFT, NBEATSx, TiDE, TSMixerx, BiTCN, DeepNPTS
+from neuralforecast.auto import AutoMLP, AutoLSTM, AutoNHITS, AutoTFT, AutoNBEATSx, AutoTiDE, AutoTSMixerx, AutoBiTCN, AutoDeepNPTS, AutoGRU, AutoTCN
+from neuralforecast.models import MLP, LSTM, NHITS, TFT, NBEATSx, TiDE, TSMixerx, BiTCN, DeepNPTS, GRU, TCN
 
 logging.getLogger('pytorch_lightning').setLevel(logging.ERROR)
 
@@ -27,14 +27,17 @@ def get_nf(
 ):
 
     models_list = [
-        AutoTiDE,
-        AutoBiTCN,
+        AutoTFT,
+        AutoTSMixerx,
+        AutoGRU,
+        AutoTCN,
+        # AutoTiDE,
+        # AutoBiTCN,
         # AutoDeepNPTS,
         # AutoLSTM,
         # AutoNHITS,
-        # AutoTFT,
         # AutoMLP,
-        # AutoNBEATSx
+        # AutoNBEATSx,
     ] if automatic_hyperparam_tuning else [
         TiDE,
         # BiTCN,

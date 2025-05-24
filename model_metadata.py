@@ -56,7 +56,6 @@ def general_config(input_size, exog_list, model_name):
                     [16, 32, 64, 128, 256, 512, 1024, 2048]
                 ),
                 "scaler_type": "standard",
-                # TODO: add dropout?
                 "learning_rate": trial.suggest_float(             
                     "learning_rate",
                     low=1e-4,
@@ -76,20 +75,24 @@ def general_config(input_size, exog_list, model_name):
             config.update({
                 "encoder_hidden_size" : trial.suggest_categorical(
                     "encoder_hidden_size",
-                    [16, 32, 64, 128]
+                    [16, 32, 64, 128, 256, 512]
                 ),
                 "encoder_n_layers" : trial.suggest_int(
                     "encoder_n_layers",
                     low=1,
-                    high=4
+                    high=8
                 ),
-                "context_size": trial.suggest_categorical(
-                    "context_size",
-                    [5, 10, 50]
+                "encoder_bias" : trial.suggest_categorical(
+                    "encoder_bias",
+                    [True, False]
+                ),
+                "encoder_dropout" : trial.suggest_categorical(
+                    "encoder_dropout",
+                    [0.0, 0.1, 0.2, 0.3]
                 ),
                 "decoder_hidden_size": trial.suggest_categorical(
                     "decoder_hidden_size",
-                    [16, 32, 64, 128]
+                    [16, 32, 64, 128, 256, 512]
                 )
             })
             return config
@@ -99,12 +102,12 @@ def general_config(input_size, exog_list, model_name):
             config.update({
                 "hidden_size" : trial.suggest_categorical(
                     "hidden_size",
-                    [256, 512, 1024]
+                    [64, 128, 256, 512, 1024]
                 ),
                 "num_layers" : trial.suggest_int(
                     "num_layers",
                     low=2,
-                    high=6
+                    high=8
                 ),
             })
             return config
@@ -120,6 +123,7 @@ def general_config(input_size, exog_list, model_name):
                         [180, 60, 1],
                         [60, 8, 1],
                         [40, 20, 1],
+                        [4, 2, 1],
                         [1, 1, 1],
                     ]
                 ),
@@ -208,6 +212,54 @@ def general_config(input_size, exog_list, model_name):
                 ),
             })
             return config
+        elif model_name == "AutoTSMixerx":
+            print("Using config for AutoTSMixerx!")
+            config = {**config_generic(trial)}
+            config.update({
+                "n_block": trial.suggest_categorical(
+                    "n_block",
+                    [1, 2, 4, 6, 8]
+                ),
+                "ff_dim": trial.suggest_categorical(
+                    "ff_dim",
+                    [32, 64, 128, 256, 512]
+                ),
+            })
+            return config
+        elif model_name == "AutoGRU":
+            print("Using config for AutoGRU!")
+            config = {**config_generic(trial)}
+            config.update({
+                "encoder_hidden_size": trial.suggest_categorical(
+                    "encoder_hidden_size",
+                    [16, 32, 64, 128, 256, 512]
+                ),
+                "encoder_n_layers":  trial.suggest_int(
+                    "encoder_n_layers",
+                    low=1,
+                    high=8
+                ),
+                "decoder_hidden_size": trial.suggest_categorical(
+                    "decoder_hidden_size",
+                    [16, 32, 64, 128, 256, 512]
+                ),
+            })
+            return config
+        elif model_name == "AutoTCN":
+            print("Using config for AutoTCN!")
+            config = {**config_generic(trial)}
+            config.update({
+                "encoder_hidden_size": trial.suggest_categorical(
+                    "encoder_hidden_size",
+                    [16, 32, 64, 128, 256, 512]
+                ),
+                "decoder_hidden_size": trial.suggest_categorical(
+                    "decoder_hidden_size",
+                    [16, 32, 64, 128, 256, 512]
+                ),
+            })
+            return config
+            
         else:
             print("Using default config!")
             return config_generic
