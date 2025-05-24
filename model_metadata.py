@@ -49,7 +49,7 @@ def general_config(input_size, exog_list, model_name):
                     "val_check_steps",
                     [1, 25, 50, 100, 200, 300, 500]
                 ),
-                "max_steps": 5000,
+                "max_steps": 1000,
                 "batch_size": 1,
                 "windows_batch_size": trial.suggest_categorical(
                     "windows_batch_size",
@@ -63,11 +63,10 @@ def general_config(input_size, exog_list, model_name):
                     high=1e-1,
                     log=True,
                 ),
-                "random_seed": 42,
-                "early_stop_patience_steps": trial.suggest_int(
+                "random_seed": 1,
+                "early_stop_patience_steps": trial.suggest_categorical(
                     "early_stop_patience_steps",
-                    low=1,
-                    high=20
+                    [5, 10, 15, 20]
                 ),
             }
         

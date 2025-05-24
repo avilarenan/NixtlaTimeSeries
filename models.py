@@ -22,12 +22,13 @@ def get_nf(
     automatic_hyperparam_tuning,
     exog_list=[],
     num_samples=5,
-    backend="optuna", model_type="univariate"
+    backend="optuna",
+    model_type="univariate"
 ):
 
     models_list = [
         AutoTiDE,
-        # AutoBiTCN,
+        AutoBiTCN,
         # AutoDeepNPTS,
         # AutoLSTM,
         # AutoNHITS,
@@ -38,7 +39,7 @@ def get_nf(
         TiDE,
         # BiTCN,
         # DeepNPTS,
-        # LSTM,
+        LSTM,
         # NHITS,
         # TFT,
         # MLP,

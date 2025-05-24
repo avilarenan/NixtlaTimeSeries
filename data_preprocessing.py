@@ -8,8 +8,13 @@ import joblib
 from datasets_metadata import ts_metadata
 import contextlib
 from preprocessing_utilities import process_farm, process_rollcorr, process_rollcov, process_entropy, process_mutual_info, process_dtw
+from preprocessing_utilities import save_df_to_file
 warnings.filterwarnings('ignore')
 
+SEPARE_PROCESSED_DATASETS = True
+OUTPUT_FORMAT = ".csv" # ".csv" or ".parquet"
+OUTPUT_PATH = "./processed_data" # NOTE: without slash in the end
+SKIP_INVERTED = False
 PLOT = False
 PARALLEL = True
 datasets_names = [
@@ -108,8 +113,6 @@ for dataset_name in tqdm(datasets_names, desc="Datasets"):
                 
             df_processed = df_raw.copy()
             df_processed_inverted = df_raw.copy()
-            
-            skip_inverted = False
 
             for agg_qts_shaped, feature in results_processed:
                 if feature == ref_ts:
@@ -123,23 +126,28 @@ for dataset_name in tqdm(datasets_names, desc="Datasets"):
                 
                 qts_shaped_inverted = agg_qts_shaped.get("inverted_shaped")
                 if qts_shaped_inverted is None:
-                    skip_inverted = True
+                    SKIP_INVERTED = True
                 else:
                     df_processed_inverted[str(feature)] = qts_shaped_inverted
 
-            df_processed["unique_id"] = f"{target_ts}_w{window}_exogenous_{process_fn.__name__}"
+            unique_id = f"{target_ts}_w{window}_exogenous_{process_fn.__name__}"
+            df_processed["unique_id"] = unique_id
             list_of_processed_dfs += [df_processed]
+            if SEPARE_PROCESSED_DATASETS:
+                save_df_to_file(df=df_processed, path=OUTPUT_PATH, filename=unique_id, format=OUTPUT_FORMAT)
 
-            if not skip_inverted:
+            if not SKIP_INVERTED:
+                unique_id_inverted = f"{target_ts}_w{window}_exogenous_{process_fn.__name__}_inverted"
                 df_processed_inverted["unique_id"] = f"{target_ts}_w{window}_exogenous_{process_fn.__name__}_inverted"
                 list_of_processed_dfs += [df_processed_inverted]
+                if SEPARE_PROCESSED_DATASETS:
+                    save_df_to_file(df=df_processed_inverted, path=OUTPUT_PATH, filename=unique_id_inverted, format=OUTPUT_FORMAT)
     
     if len(list_of_processed_dfs) > 0:
-        df_processed = pd.concat(list_of_processed_dfs)
-        df = pd.concat([df_raw, df_processed])
+        if not SEPARE_PROCESSED_DATASETS:
+            df_processed = pd.concat(list_of_processed_dfs)
+            df = pd.concat([df_raw, df_processed])
+            save_df_to_file(df=df, path=OUTPUT_PATH, filename=dataset_name, format=OUTPUT_FORMAT)
     else:
         df = df_raw
-
-    
-    # df.to_csv(f"./processed_data/{dataset_name}.csv", index=False)
-    df.to_parquet(f"./processed_data/{dataset_name}.parquet", index=False)
+        save_df_to_file(df=df, path=OUTPUT_PATH, filename=dataset_name, format=OUTPUT_FORMAT)

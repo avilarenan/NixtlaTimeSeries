@@ -1,11 +1,9 @@
 import warnings
-from tqdm.notebook import tqdm
+from pathlib import Path
 
 from PyFARM import farm
 
 from dtaidistance import dtw
-
-from scipy.spatial.distance import euclidean
 
 from pyinform.relativeentropy import relative_entropy
 from pyinform.mutualinfo import mutual_info
@@ -17,6 +15,29 @@ import pandas as pd
 from numpy.lib.stride_tricks import sliding_window_view
 
 warnings.filterwarnings('once')
+
+def read_df_from_file(path, filename, format):
+    if format == ".parquet":
+        print(f"Saving to {path}/{filename}.parquet")
+        return pd.read_parquet(f"{path}/{filename}.parquet")
+    elif format == ".csv":
+        print(f"Saving to {path}/{filename}.csv")
+        return pd.read_csv(f"{path}/{filename}.csv")
+    else:
+        raise Exception(f"Unrecognized input file format: {format}. \nAvailable formats are: .csv and .parquet")
+
+def save_df_to_file(df, path, filename, format=".parquet"):
+    if any(substring in filename for substring in [".csv", ".parquet"]):
+        raise Exception("Filename must not contain .csv or .parquet extensions. Rather use the format parameter.")
+    Path(path).mkdir(parents=True, exist_ok=True)
+    if format == ".parquet":
+        print(f"Saving to {path}/{filename}.parquet")
+        df.to_parquet(f"{path}/{filename}.parquet")
+    elif format == ".csv":
+        print(f"Saving to {path}/{filename}.csv")
+        df.to_csv(f"{path}/{filename}.csv", index=False)
+    else:
+        raise Exception(f"Unrecognized output file format: {format}. \nAvailable formats are: .csv and .parquet")
 
 def process_farm(farm_params):
     '''

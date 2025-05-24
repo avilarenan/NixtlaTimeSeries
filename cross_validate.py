@@ -12,7 +12,7 @@ import pandas as pd
 
 from utilsforecast.evaluation import evaluate
 from utilsforecast.losses import mse, mae, rmse, mape, smape
-
+from preprocessing_utilities import read_df_from_file, save_df_to_file
 from neuralforecast import NeuralForecast
 
 from models import get_nf
@@ -24,18 +24,20 @@ HORIZONS = [
     # 720
 ]
 LOOKBACK = 96
-NUM_SAMPLES = 50
-AUTOMATIC_HYPERPARAM_TUNING = False
+NUM_SAMPLES = 2
+INPUT_DATA_FORMAT = ".csv"
+INPUT_DATA_PATH = "./processed_data" # NOTE: without slash in the end
+OUTPUT_RESULTS_PATH = "./results" # NOTE: without slash in the end
+AUTOMATIC_HYPERPARAM_TUNING = True
 ACCURACY_METRICS_TO_EVALUATE = [
     mse,
-    # mae,
+    mae,
     # rmse,
     # mape,
     # smape
 ]
 
-
-datasets = [
+DATASETS = [
     "ETTh1",
     # "ETTh2",
     # "ETTm1",
@@ -46,20 +48,18 @@ datasets = [
 ]
 
 for horizon in tqdm(HORIZONS):
-    for dataset_name in tqdm(datasets):
+    for dataset_name in tqdm(DATASETS):
         print(f"Running dataset {dataset_name} | Horizon: {horizon}")
+
         exog_list = ts_metadata[dataset_name]["exog_list"]
         target_ts = ts_metadata[dataset_name]["target_ts"]
         freq = ts_metadata[dataset_name]["freq"]
-
         test_size = ts_metadata[dataset_name]["test_size"]
         valid_size = ts_metadata[dataset_name]["valid_size"]
 
-        df = pd.read_parquet(f"./processed_data/{dataset_name}.parquet")
-        # df = pd.read_csv(f"./processed_data/{dataset_name}.csv")
-        df["ds"] = pd.to_datetime(df["ds"])
+        df = read_df_from_file(path=INPUT_DATA_PATH, filename=dataset_name, format=INPUT_DATA_FORMAT)
 
-        # nf = NeuralForecast.load(path=f'./saved_models/{dataset_name}')
+        df["ds"] = pd.to_datetime(df["ds"])
 
         nf = get_nf(
             horizon=horizon,
@@ -78,27 +78,19 @@ for horizon in tqdm(HORIZONS):
         evaluation_df = evaluate(cv_df.drop(columns='cutoff'), metrics=ACCURACY_METRICS_TO_EVALUATE)
         evaluation_df['best_model'] = evaluation_df.drop(columns=['metric', 'unique_id']).idxmin(axis=1)
 
-        try:
-            Path(f"./results/horizon{horizon}/").mkdir(parents=True, exist_ok=True)
-            evaluation_df.to_csv(f"./results/horizon{horizon}/{dataset_name}.csv", index=False)
-        except Exception as e:
-            print(e)
-            evaluation_df.to_csv(f"h{horizon}_{dataset_name}.csv", index=False)
-
-
-        try:
-            Path(f"./saved_models/{dataset_name}_h{horizon}/").mkdir(parents=True, exist_ok=True)
+        if AUTOMATIC_HYPERPARAM_TUNING:
+            for model in nf.models:
+                trials_df = model.results.trials_dataframe()
+                save_df_to_file(df=trials_df, path=f"{OUTPUT_RESULTS_PATH}/horizon{horizon}", filename=f"{model}_trials", format=".csv")
+        else:
+            base_folder = "saved_models_auto" if AUTOMATIC_HYPERPARAM_TUNING else "saved_models"
+            Path(f"./{base_folder}/{dataset_name}_h{horizon}/").mkdir(parents=True, exist_ok=True)
             nf.save(
-                path=f"./saved_models/{dataset_name}_h{horizon}/",
+                path=f"./{base_folder}/{dataset_name}_h{horizon}/",
                 model_index=None,
                 overwrite=True,
                 save_dataset=True
             )
-        except Exception as e:
-            print(e)
-            nf.save(
-                path=f"./saved_models/",
-                model_index=None,
-                overwrite=True,
-                save_dataset=True
-            )
+
+        save_df_to_file(df=evaluation_df, path=f"{OUTPUT_RESULTS_PATH}/horizon{horizon}", filename=f"{dataset_name}_metrics", format=".csv")
+        save_df_to_file(df=cv_df, path=f"{OUTPUT_RESULTS_PATH}/horizon{horizon}", filename=f"{dataset_name}_pred", format=".parquet")
