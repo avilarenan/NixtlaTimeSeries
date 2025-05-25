@@ -179,4 +179,7 @@ cython_debug/
 /processed_data
 /bibliography
 /canvas
+
+/results
+
 nohup.out

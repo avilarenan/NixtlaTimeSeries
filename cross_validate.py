@@ -14,20 +14,28 @@ from utilsforecast.evaluation import evaluate
 from utilsforecast.losses import mse, mae, rmse, mape, smape
 from preprocessing_utilities import read_df_from_file, save_df_to_file
 
+from neuralforecast.auto import AutoMLP, AutoLSTM, AutoNHITS, AutoTFT, AutoNBEATSx, AutoTiDE, AutoTSMixerx, AutoBiTCN, AutoDeepNPTS, AutoGRU, AutoTCN
+from neuralforecast.models import MLP, LSTM, NHITS, TFT, NBEATSx, TiDE, TSMixerx, BiTCN, DeepNPTS, GRU, TCN
+
 from models import get_nf
 
 HORIZONS = [
-    96,
-    # 192,
-    # 336,
-    # 720
+    # 96,
+    192,
+    336,
+    720
 ]
 LOOKBACK = 96
-NUM_SAMPLES = 2
+NUM_SAMPLES = 10
 INPUT_DATA_FORMAT = ".csv"
 INPUT_DATA_PATH = "./processed_data" # NOTE: without slash in the end
 OUTPUT_RESULTS_PATH = "./results" # NOTE: without slash in the end
-AUTOMATIC_HYPERPARAM_TUNING = True
+AUTOMATIC_HYPERPARAM_TUNING = False
+USE_BEST_HYPERPARAMETERS_OF_TRIALS = True
+
+if AUTOMATIC_HYPERPARAM_TUNING:
+    USE_BEST_HYPERPARAMETERS_OF_TRIALS = False
+
 ACCURACY_METRICS_TO_EVALUATE = [
     mse,
     mae,
@@ -46,9 +54,34 @@ DATASETS = [
     # "TrafficL",
 ]
 
+MODELS_LIST = [
+    AutoTFT,
+    AutoTSMixerx,
+    AutoGRU,
+    AutoTCN,
+    AutoTiDE,
+    AutoBiTCN,
+    AutoDeepNPTS,
+    AutoLSTM,
+    AutoNHITS,
+    AutoMLP,
+    AutoNBEATSx,
+] if AUTOMATIC_HYPERPARAM_TUNING else [
+    TFT,
+    TSMixerx,
+    GRU,
+    TCN,
+    TiDE,
+    BiTCN,
+    DeepNPTS,
+    LSTM,
+    NHITS,
+    MLP,
+    NBEATSx
+]
+
 for horizon in tqdm(HORIZONS):
     for dataset_name in tqdm(DATASETS):
-        print(f"Running dataset {dataset_name} | Horizon: {horizon}")
 
         exog_list = ts_metadata[dataset_name]["exog_list"]
         target_ts = ts_metadata[dataset_name]["target_ts"]
@@ -60,36 +93,44 @@ for horizon in tqdm(HORIZONS):
 
         df["ds"] = pd.to_datetime(df["ds"])
 
-        nf = get_nf(
-            horizon=horizon,
-            lookback=LOOKBACK,
-            freq=freq,
-            automatic_hyperparam_tuning=AUTOMATIC_HYPERPARAM_TUNING,
-            exog_list=exog_list,
-            num_samples=NUM_SAMPLES,
-            backend="optuna"
-        )
-
-        cv_df = nf.cross_validation(df=df, val_size=valid_size, test_size=test_size, step_size=1, n_windows=None, verbose=True)
-
-        cv_df.columns = cv_df.columns.str.replace('-median', '')
-
-        evaluation_df = evaluate(cv_df.drop(columns='cutoff'), metrics=ACCURACY_METRICS_TO_EVALUATE)
-        evaluation_df['best_model'] = evaluation_df.drop(columns=['metric', 'unique_id']).idxmin(axis=1)
-
-        if AUTOMATIC_HYPERPARAM_TUNING:
-            for model in nf.models:
-                trials_df = model.results.trials_dataframe()
-                save_df_to_file(df=trials_df, path=f"{OUTPUT_RESULTS_PATH}/{dataset_name}/horizon{horizon}", filename=f"{model}_trials", format=".csv")
-        else:
-            base_folder = "saved_models_auto" if AUTOMATIC_HYPERPARAM_TUNING else "saved_models"
-            Path(f"./{base_folder}/{dataset_name}_h{horizon}/").mkdir(parents=True, exist_ok=True)
-            nf.save(
-                path=f"./{base_folder}/{dataset_name}_h{horizon}/",
-                model_index=None,
-                overwrite=True,
-                save_dataset=True
+        for model in MODELS_LIST:
+            print(f"Running dataset {dataset_name} | Horizon: {horizon} | Model: {model}")
+            nf = get_nf(
+                horizon=horizon,
+                lookback=LOOKBACK,
+                freq=freq,
+                models_list=[model],
+                automatic_hyperparam_tuning=AUTOMATIC_HYPERPARAM_TUNING,
+                dataset_name=dataset_name,
+                exog_list=exog_list,
+                num_samples=NUM_SAMPLES,
+                backend="optuna",
+                use_best_of_trials=USE_BEST_HYPERPARAMETERS_OF_TRIALS
             )
-        auto_label_str = "_auto" if AUTOMATIC_HYPERPARAM_TUNING else "" 
-        save_df_to_file(df=evaluation_df, path=f"{OUTPUT_RESULTS_PATH}/{dataset_name}/horizon{horizon}{auto_label_str}", filename=f"metrics", format=".csv")
-        save_df_to_file(df=cv_df, path=f"{OUTPUT_RESULTS_PATH}/{dataset_name}/horizon{horizon}{auto_label_str}", filename=f"pred", format=".parquet")
+
+            cv_df = nf.cross_validation(df=df, val_size=valid_size, test_size=test_size, step_size=1, n_windows=None, verbose=True)
+
+            cv_df.columns = cv_df.columns.str.replace('-median', '')
+
+            evaluation_df = evaluate(cv_df.drop(columns='cutoff'), metrics=ACCURACY_METRICS_TO_EVALUATE)
+
+            auto_label_str = "_auto" if AUTOMATIC_HYPERPARAM_TUNING else "" 
+
+            if AUTOMATIC_HYPERPARAM_TUNING:
+                auto_label_str = "_auto"
+                for model in nf.models:
+                    trials_df = model.results.trials_dataframe()
+                    save_df_to_file(df=trials_df, path=f"{OUTPUT_RESULTS_PATH}/{dataset_name}/{model}_horizon{horizon}{auto_label_str}", filename=f"{model}_trials", format=".csv")
+            else:
+                auto_label_str = ""
+                base_folder = "saved_models"
+                Path(f"./{base_folder}/{model}_{dataset_name}_h{horizon}/").mkdir(parents=True, exist_ok=True)
+                nf.save(
+                    path=f"./{base_folder}/{model}_{dataset_name}_h{horizon}/",
+                    model_index=None,
+                    overwrite=True,
+                    save_dataset=True
+                )
+            
+            save_df_to_file(df=evaluation_df, path=f"{OUTPUT_RESULTS_PATH}/{dataset_name}/{model.__name__}_horizon{horizon}{auto_label_str}", filename=f"metrics", format=".csv")
+            save_df_to_file(df=cv_df, path=f"{OUTPUT_RESULTS_PATH}/{dataset_name}/{model.__name__}_horizon{horizon}{auto_label_str}", filename=f"pred", format=".parquet")

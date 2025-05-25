@@ -19,66 +19,51 @@ def get_nf(
     horizon,
     lookback,
     freq,
+    models_list,
     automatic_hyperparam_tuning,
+    dataset_name,
     exog_list=[],
     num_samples=5,
     backend="optuna",
-    model_type="univariate"
+    use_best_of_trials=False
 ):
 
-    models_list = [
-        AutoTFT,
-        AutoTSMixerx,
-        AutoGRU,
-        AutoTCN,
-        # AutoTiDE,
-        # AutoBiTCN,
-        # AutoDeepNPTS,
-        # AutoLSTM,
-        # AutoNHITS,
-        # AutoMLP,
-        # AutoNBEATSx,
-    ] if automatic_hyperparam_tuning else [
-        TiDE,
-        # BiTCN,
-        # DeepNPTS,
-        LSTM,
-        # NHITS,
-        # TFT,
-        # MLP,
-        # NBEATSx
-    ]
+    if automatic_hyperparam_tuning:
 
-    if model_type =="univariate":
-        if automatic_hyperparam_tuning:
-            models = [
-                _model(
-                    h=horizon,
-                    backend=backend,
-                    loss=MSE(),
-                    config=general_config(
-                        # horizon=horizon,
-                        input_size=lookback,
-                        exog_list=exog_list,
-                        model_name=_model.__name__
-                    ),
-                    num_samples=num_samples
-                ) for _model in models_list
-            ]
-        else:
-            models = [
-                get_fixed_hyper_parameter_model(
-                    model_name=_model.__name__,
-                    horizon=horizon,
-                    hist_exog_list=exog_list,
-                    lookback=lookback,
-                    loss=MSE(),
-                ) for _model in models_list
-            ]
+        models = []
 
-        return NeuralForecast(models=models, freq=freq)
+        for _model in models_list:
+            kwargs = {
+                "h": horizon,
+                "backend": backend,
+                "loss": MSE(),
+                "num_samples": num_samples
+            }
+            if _model.__name__ in ["AutoTSMixerx"]:
+                kwargs["n_series"] = 1
+            if _model.__name__ in ["AutoGRU", "AutoLSTM", "AutoRNN"]:
+                lookback = horizon # NOTE: It seems recursive models need at least the same amount of data in the input_size as in horizon
 
-    elif model_type == "multivariate":
-        raise Exception("Not implemented yet")
+            kwargs["config"] = general_config(
+                horizon=horizon,
+                input_size=lookback,
+                exog_list=exog_list,
+                model_name=_model.__name__
+            )
+
+            models += [_model(**kwargs)]
+        
     else:
-        raise Exception(f"Unrecognized model type: {model_type}. Available model types are: univariate and multivariate")
+        models = [
+            get_fixed_hyper_parameter_model(
+                model_name=_model.__name__,
+                horizon=horizon,
+                hist_exog_list=exog_list,
+                lookback=lookback,
+                loss=MSE(),
+                dataset_name=dataset_name,
+                use_best_of_trials=use_best_of_trials
+            ) for _model in models_list
+        ]
+
+    return NeuralForecast(models=models, freq=freq)

@@ -18,10 +18,10 @@ warnings.filterwarnings('once')
 
 def read_df_from_file(path, filename, format):
     if format == ".parquet":
-        print(f"Saving to {path}/{filename}.parquet")
+        print(f"Reading from {path}/{filename}.parquet")
         return pd.read_parquet(f"{path}/{filename}.parquet")
     elif format == ".csv":
-        print(f"Saving to {path}/{filename}.csv")
+        print(f"Reading from {path}/{filename}.csv")
         return pd.read_csv(f"{path}/{filename}.csv")
     else:
         raise Exception(f"Unrecognized input file format: {format}. \nAvailable formats are: .csv and .parquet")
