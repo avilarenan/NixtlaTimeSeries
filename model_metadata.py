@@ -41,12 +41,17 @@ def get_fixed_hyper_parameter_model(model_name, horizon, hist_exog_list, lookbac
         json_acceptable_string = json_acceptable_string.replace("False", "\"False\"")
         json_acceptable_string = json_acceptable_string.replace("True", "\"True\"")
 
-
-        print(f"{json_acceptable_string}")
+        print(f"Model parameters: {json_acceptable_string}")
         config_params_as_dict = json.loads(json_acceptable_string)
         if config_params_as_dict["loss"] == "MSE":
             config_params_as_dict["loss"] = MSE()
             config_params_as_dict["valid_loss"] = MSE()
+
+        for key, value in config_params_as_dict.items():
+            if value == "False":
+                config_params_as_dict[key] = False
+            elif value == "True":
+                config_params_as_dict[key] = True
 
         print(f"Using optimal hyperparameters: [{type(config_params_as_dict)}] {config_params_as_dict}")
 
@@ -88,6 +93,21 @@ def get_fixed_hyper_parameter_model(model_name, horizon, hist_exog_list, lookbac
                 hist_exog_list=hist_exog_list,
                 n_head=4,
                 hidden_size=64
+            )
+        if model_name == "LSTM":
+            return LSTM(
+                h=horizon, 
+                input_size=horizon,
+                loss=loss,
+                encoder_n_layers=2,
+                encoder_hidden_size=128,
+                decoder_hidden_size=128,
+                decoder_layers=2,
+                max_steps=1000,
+                learning_rate=0.01,
+                early_stop_patience_steps=5,
+                hist_exog_list=hist_exog_list,
+                h_train=1,
             )
         else:
             raise Exception(f"Model {model_name} not implemented.")

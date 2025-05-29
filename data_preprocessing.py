@@ -75,7 +75,7 @@ for dataset_name in tqdm(datasets_names, desc="Datasets"):
     ref_ts = "y"
 
     list_of_process_fns = [
-        # process_farm,
+        process_farm,
         # process_rollcorr,
         # process_rollcov,
         # process_entropy,
@@ -130,15 +130,15 @@ for dataset_name in tqdm(datasets_names, desc="Datasets"):
                 else:
                     df_processed_inverted[str(feature)] = qts_shaped_inverted
 
-            unique_id = f"{target_ts}_w{window}_exogenous_{process_fn.__name__}"
+            unique_id = f"{dataset_name}_w{window}_{process_fn.__name__.split("_")[-1]}"
             df_processed["unique_id"] = unique_id
             list_of_processed_dfs += [df_processed]
             if SEPARE_PROCESSED_DATASETS:
                 save_df_to_file(df=df_processed, path=OUTPUT_PATH, filename=unique_id, format=OUTPUT_FORMAT)
 
             if not SKIP_INVERTED:
-                unique_id_inverted = f"{target_ts}_w{window}_exogenous_{process_fn.__name__}_inverted"
-                df_processed_inverted["unique_id"] = f"{target_ts}_w{window}_exogenous_{process_fn.__name__}_inverted"
+                unique_id_inverted = f"{target_ts}_w{window}_i{process_fn.__name__}"
+                df_processed_inverted["unique_id"] = f"{dataset_name}_w{window}_i{process_fn.__name__.split("_")[-1]}"
                 list_of_processed_dfs += [df_processed_inverted]
                 if SEPARE_PROCESSED_DATASETS:
                     save_df_to_file(df=df_processed_inverted, path=OUTPUT_PATH, filename=unique_id_inverted, format=OUTPUT_FORMAT)
