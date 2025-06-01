@@ -75,11 +75,11 @@ for dataset_name in tqdm(datasets_names, desc="Datasets"):
     ref_ts = "y"
 
     list_of_process_fns = [
-        process_farm,
+        # process_farm,
         # process_rollcorr,
         # process_rollcov,
         # process_entropy,
-        # process_mutual_info,
+        process_mutual_info,
         # process_dtw,
     ]
     
@@ -130,7 +130,7 @@ for dataset_name in tqdm(datasets_names, desc="Datasets"):
                 else:
                     df_processed_inverted[str(feature)] = qts_shaped_inverted
 
-            unique_id = f"{dataset_name}_w{window}_{process_fn.__name__.split("_")[-1]}"
+            unique_id = f"{dataset_name}_w{window}_{"_".join(process_fn.__name__.split("_")[1:])}"
             df_processed["unique_id"] = unique_id
             list_of_processed_dfs += [df_processed]
             if SEPARE_PROCESSED_DATASETS:

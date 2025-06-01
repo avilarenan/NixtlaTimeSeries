@@ -39,9 +39,9 @@ if AUTOMATIC_HYPERPARAM_TUNING:
 ACCURACY_METRICS_TO_EVALUATE = [
     mse,
     mae,
-    # rmse,
-    # mape,
-    # smape
+    rmse,
+    mape,
+    smape
 ]
 
 DATASETS = [
@@ -57,11 +57,11 @@ DATASETS = [
 SHAPING_PROCESSES = [ # TODO: programmatically sync with process function names
     # "",
     "farm",
-    # "rollcorr",
-    # "rollcov",
-    # "entropy",
-    # "mutual_info",
-    # "dtw"
+    "rollcorr",
+    "rollcov",
+    "entropy",
+    "mutual_info",
+    "dtw"
 ]
 
 SHAPING_WINDOWS = [ # TODO: programmatically sync with process shaping windows
@@ -97,7 +97,7 @@ MODELS_LIST = [
     MLP,
     NBEATSx
 ]
-
+# ./processed_data/ETTh1_w501_mutual_info.csv
 for horizon in tqdm(HORIZONS):
     for dataset_name in tqdm(DATASETS):
 
@@ -154,9 +154,9 @@ for horizon in tqdm(HORIZONS):
                     else:
                         auto_label_str = ""
                         base_folder = "saved_models"
-                        Path(f"./{base_folder}/{model}_{shaped_dataset_name}_h{horizon}/").mkdir(parents=True, exist_ok=True)
+                        Path(f"./{base_folder}/{model.__class__.__name__}_{shaped_dataset_name}_h{horizon}/").mkdir(parents=True, exist_ok=True)
                         nf.save(
-                            path=f"./{base_folder}/{model}_{shaped_dataset_name}_h{horizon}/",
+                            path=f"./{base_folder}/{model.__class__.__name__}_{shaped_dataset_name}_h{horizon}/",
                             model_index=None,
                             overwrite=True,
                             save_dataset=True
