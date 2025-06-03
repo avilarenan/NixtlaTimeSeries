@@ -123,13 +123,15 @@ logger.info(f"model_names_list: {MODEL_NAMES_LIST}")
 STATE_FILE = "exps_state.csv" # NOTE: assuming it is in root repo folder 
 if AUTOMATIC_HYPERPARAM_TUNING:
     STATE_FILE = "auto_exps_state.csv"
+    SHAPING_PROCESSES = ["identity"]
+    SHAPING_WINDOWS = ["N/A"]
 
 try:
-    df_exps_state = pd.read_csv(STATE_FILE)
+    df_exps_state = pd.read_csv(STATE_FILE, index_col=[0,1], header=[0,1,2]) # NOTE: restablishing multiindex
 except FileNotFoundError as e:
     logger.info("Experiments state file not found, creating a new one from scratch.")
     row_levels = [HORIZONS, MODEL_NAMES_LIST]
-    col_levels = [DATASETS, SHAPING_PROCESSES, SHAPING_WINDOWS+["N/A"]]
+    col_levels = [DATASETS, SHAPING_PROCESSES, SHAPING_WINDOWS]
 
     row_index = pd.MultiIndex.from_product(row_levels, names=['Horizons', 'Models'])
     col_index = pd.MultiIndex.from_product(col_levels, names=['Datasets', 'Shaping Process', 'Shaping Window'])
@@ -174,7 +176,9 @@ for horizon in tqdm(HORIZONS):
                         for model in MODELS_LIST:
                             _model_name = find_model_name(model)
                             logger.info(f"Running model: {_model_name}")
+                            logger.info(f"state cell [{[horizon, _model_name]}|{[dataset_name, shaping_process, shaping_window]}] = \n{df_exps_state.loc[(horizon, _model_name), (dataset_name, shaping_process, shaping_window)]}")
                             if df_exps_state.loc[(horizon, _model_name), (dataset_name, shaping_process, shaping_window)] == True: 
+                                logger.info(f"Skipping {_model_name} because it is done in experiments states file.")
                                 continue # NOTE: Skip if already ran
                             nf = get_nf(
                                 horizon=horizon,
