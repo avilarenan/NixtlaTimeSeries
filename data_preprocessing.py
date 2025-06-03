@@ -7,7 +7,7 @@ from joblib import Parallel, delayed
 import joblib
 from datasets_metadata import ts_metadata
 import contextlib
-from preprocessing_utilities import process_farm, process_rollcorr, process_rollcov, process_entropy, process_mutual_info, process_dtw
+from preprocessing_utilities import pfarm, prollcorr, prollcov, pentropy, pmutual_info, pdtw
 from preprocessing_utilities import save_df_to_file
 warnings.filterwarnings('ignore')
 
@@ -25,6 +25,15 @@ datasets_names = [
     # "Weather",
     # "ECL",
     # "TrafficL"
+]
+
+list_of_process_fns = [ # NOTE: in order to produce raw dataset, comment all processing functions
+    pfarm,
+    prollcorr,
+    prollcov,
+    pentropy,
+    pmutual_info,
+    # pdtw,
 ]
 
 @contextlib.contextmanager
@@ -73,15 +82,6 @@ for dataset_name in tqdm(datasets_names, desc="Datasets"):
 
     # # SHAPING
     ref_ts = "y"
-
-    list_of_process_fns = [
-        # process_farm,
-        # process_rollcorr,
-        # process_rollcov,
-        # process_entropy,
-        process_mutual_info,
-        # process_dtw,
-    ]
     
     list_of_processed_dfs = []
     for window in tqdm(farm_windows, leave=False, desc="Iterating windows"):
@@ -126,22 +126,22 @@ for dataset_name in tqdm(datasets_names, desc="Datasets"):
                 
                 qts_shaped_inverted = agg_qts_shaped.get("inverted_shaped")
                 if qts_shaped_inverted is None:
-                    SKIP_INVERTED = True
+                    df_processed_inverted[str(feature)] = None
                 else:
                     df_processed_inverted[str(feature)] = qts_shaped_inverted
 
-            unique_id = f"{dataset_name}_w{window}_{"_".join(process_fn.__name__.split("_")[1:])}"
+            unique_id = f"{dataset_name}_w{window}_{process_fn.__name__}"
             df_processed["unique_id"] = unique_id
             list_of_processed_dfs += [df_processed]
             if SEPARE_PROCESSED_DATASETS:
                 save_df_to_file(df=df_processed, path=OUTPUT_PATH, filename=unique_id, format=OUTPUT_FORMAT)
 
-            if not SKIP_INVERTED:
-                unique_id_inverted = f"{target_ts}_w{window}_i{process_fn.__name__}"
-                df_processed_inverted["unique_id"] = f"{dataset_name}_w{window}_i{process_fn.__name__.split("_")[-1]}"
+            if not SKIP_INVERTED and df_processed_inverted[str(feature)] is not None:
+                unique_id_inverted = f"{dataset_name}_w{window}_i{process_fn.__name__}"
+                df_processed_inverted["unique_id"] = f"{dataset_name}_w{window}_i{process_fn.__name__}"
                 list_of_processed_dfs += [df_processed_inverted]
-                if SEPARE_PROCESSED_DATASETS:
-                    save_df_to_file(df=df_processed_inverted, path=OUTPUT_PATH, filename=unique_id_inverted, format=OUTPUT_FORMAT)
+                
+                save_df_to_file(df=df_processed_inverted, path=OUTPUT_PATH, filename=unique_id_inverted, format=OUTPUT_FORMAT)
     
     if len(list_of_processed_dfs) > 0:
         if not SEPARE_PROCESSED_DATASETS:
