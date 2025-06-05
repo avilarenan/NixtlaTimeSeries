@@ -13,13 +13,11 @@ from datasets_metadata import ts_metadata
 import pandas as pd
 
 from utilsforecast.evaluation import evaluate
-from utilsforecast.losses import mse, mae, rmse, mape, smape
 from preprocessing_utilities import read_df_from_file, save_df_to_file
 
-from neuralforecast.auto import AutoMLP, AutoLSTM, AutoNHITS, AutoTFT, AutoNBEATSx, AutoTiDE, AutoTSMixerx, AutoBiTCN, AutoDeepNPTS, AutoGRU, AutoTCN
-from neuralforecast.models import MLP, LSTM, NHITS, TFT, NBEATSx, TiDE, TSMixerx, BiTCN, DeepNPTS, GRU, TCN
-
 from models import get_nf
+
+from experiments_metadata import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -28,104 +26,7 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(messag
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
-HORIZONS = [
-    96,
-    192,
-    336,
-    720
-]
-LOOKBACK = 96
-NUM_SAMPLES = 20
-INPUT_DATA_FORMAT = ".csv"
-INPUT_DATA_PATH = "./processed_data" # NOTE: without slash in the end
-OUTPUT_RESULTS_PATH = "./results" # NOTE: without slash in the end
-AUTOMATIC_HYPERPARAM_TUNING = False
-USE_BEST_HYPERPARAMETERS_OF_TRIALS = True
-
-if AUTOMATIC_HYPERPARAM_TUNING:
-    USE_BEST_HYPERPARAMETERS_OF_TRIALS = False
-
-ACCURACY_METRICS_TO_EVALUATE = [
-    mse,
-    mae,
-    rmse,
-    mape,
-    smape
-]
-
-DATASETS = [
-    "ETTh1",
-    # "ETTh2",
-    # "ETTm1",
-    # "ETTm2",
-    # "Weather",
-    # "ECL",
-    # "TrafficL",
-]
-
-SHAPING_PROCESSES = [ # TODO: programmatically sync with process function names
-    "identity",
-    "pfarm",
-    "prollcorr",
-    "prollcov",
-    "pentropy",
-    "pmutual_info",
-    "ipfarm",
-    "iprollcorr",
-    "iprollcov",
-    "ipentropy",
-    "ipmutual_info",
-    # "dtw"
-]
-
-SHAPING_WINDOWS = [ # TODO: programmatically sync with process shaping windows
-    501,
-    751,
-    1001,
-    1251,
-    1501
-]
-
-MODELS_LIST = [
-    AutoTFT,
-    AutoTSMixerx,
-    AutoGRU,
-    AutoTCN,
-    AutoTiDE,
-    AutoBiTCN,
-    AutoDeepNPTS,
-    AutoLSTM,
-    AutoNHITS,
-    AutoMLP,
-    AutoNBEATSx,
-] if AUTOMATIC_HYPERPARAM_TUNING else [
-    TFT,
-    TSMixerx,
-    GRU,
-    TCN,
-    TiDE,
-    BiTCN,
-    DeepNPTS,
-    LSTM,
-    NHITS,
-    MLP,
-    NBEATSx
-]
-
-def find_model_name(model_class):
-    if model_class.__class__.__name__ == "type":
-        return model_class.__name__
-    else:
-        return model_class.__class__.__name__
-MODEL_NAMES_LIST = [find_model_name(model) for model in MODELS_LIST]
 logger.info(f"model_names_list: {MODEL_NAMES_LIST}")
-
-STATE_FILE = "exps_state.csv" # NOTE: assuming it is in root repo folder 
-if AUTOMATIC_HYPERPARAM_TUNING:
-    STATE_FILE = "auto_exps_state.csv"
-    SHAPING_PROCESSES = ["identity"]
-    SHAPING_WINDOWS = ["N/A"]
-
 try:
     df_exps_state = pd.read_csv(STATE_FILE, index_col=[0,1], header=[0,1,2]) # NOTE: restablishing multiindex
 except FileNotFoundError as e:

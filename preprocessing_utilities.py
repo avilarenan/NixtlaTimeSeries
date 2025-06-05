@@ -59,7 +59,7 @@ def pfarm(farm_params):
         ff_align=False,
         lcwin=window,
         fuzzyc=[1]
-    )["qts_shaped"]
+    )["qts_shaped"] # TODO: shaping ratio = rel_local_fuzz (between 0 and 1)
 
     return {"shaped" : ret}, exogenous_feature
 
