@@ -39,7 +39,7 @@ NUM_SAMPLES = 20
 INPUT_DATA_FORMAT = ".csv"
 INPUT_DATA_PATH = "./processed_data" # NOTE: without slash in the end
 OUTPUT_RESULTS_PATH = "./results" # NOTE: without slash in the end
-AUTOMATIC_HYPERPARAM_TUNING = True
+AUTOMATIC_HYPERPARAM_TUNING = False
 USE_BEST_HYPERPARAMETERS_OF_TRIALS = True
 
 if AUTOMATIC_HYPERPARAM_TUNING:
@@ -130,8 +130,11 @@ try:
     df_exps_state = pd.read_csv(STATE_FILE, index_col=[0,1], header=[0,1,2]) # NOTE: restablishing multiindex
 except FileNotFoundError as e:
     logger.info("Experiments state file not found, creating a new one from scratch.")
-    row_levels = [HORIZONS, MODEL_NAMES_LIST]
-    col_levels = [DATASETS, SHAPING_PROCESSES, SHAPING_WINDOWS]
+    STR_HORIZONS = [str(h) for h in HORIZONS]
+    STR_SHAPING_WINDOWS = [str(w) for w in SHAPING_WINDOWS] # NOTE: setting as string because reading and writing multiindex dfs to csv and correctly recognizing data headers and indexes types is problematic
+
+    row_levels = [STR_HORIZONS, MODEL_NAMES_LIST]
+    col_levels = [DATASETS, SHAPING_PROCESSES, STR_SHAPING_WINDOWS]
 
     row_index = pd.MultiIndex.from_product(row_levels, names=['Horizons', 'Models'])
     col_index = pd.MultiIndex.from_product(col_levels, names=['Datasets', 'Shaping Process', 'Shaping Window'])
@@ -176,8 +179,8 @@ for horizon in tqdm(HORIZONS):
                         for model in MODELS_LIST:
                             _model_name = find_model_name(model)
                             logger.info(f"Running model: {_model_name}")
-                            logger.info(f"state cell [{[horizon, _model_name]}|{[dataset_name, shaping_process, shaping_window]}] = \n{df_exps_state.loc[(horizon, _model_name), (dataset_name, shaping_process, shaping_window)]}")
-                            if df_exps_state.loc[(horizon, _model_name), (dataset_name, shaping_process, shaping_window)] == True: 
+                            logger.info(f"state cell [{[str(horizon), _model_name]}|{[dataset_name, shaping_process, str(shaping_window)]}] = \n{df_exps_state.loc[(str(horizon), _model_name), (dataset_name, shaping_process, str(shaping_window))]}")
+                            if df_exps_state.loc[(str(horizon), _model_name), (dataset_name, shaping_process, str(shaping_window))] == True: # WARNING: for some reason whe reading the csv from auto, shaping window is read as int and from normal it is read as str
                                 logger.info(f"Skipping {_model_name} because it is done in experiments states file.")
                                 continue # NOTE: Skip if already ran
                             nf = get_nf(
@@ -228,7 +231,7 @@ for horizon in tqdm(HORIZONS):
                                 save_df_to_file(df=evaluation_df, path=f"{OUTPUT_RESULTS_PATH}/{shaped_dataset_name}/{model_class_name}_horizon{horizon}{auto_label_str}", filename=f"metrics", format=".csv")
                                 save_df_to_file(df=cv_df, path=f"{OUTPUT_RESULTS_PATH}/{shaped_dataset_name}/{model_class_name}_horizon{horizon}{auto_label_str}", filename=f"pred", format=".parquet")
                             
-                            df_exps_state.loc[(horizon, _model_name), (dataset_name, shaping_process, shaping_window)] = True # Register experiment state run
+                            df_exps_state.loc[(str(horizon), _model_name), (dataset_name, shaping_process, str(shaping_window))] = True # Register experiment state run
                             df_exps_state.to_csv(STATE_FILE)
                     except Exception as e:
                         error_msg = f"Error (inner case) when running: horizon: {horizon} | dataset_name: {dataset_name} | shaping_process: {shaping_process} | shaping_window: {shaping_window} | shaped_dataset_name: {shaped_dataset_name} | model : {model}"

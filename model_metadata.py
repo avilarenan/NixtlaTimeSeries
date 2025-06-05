@@ -138,7 +138,7 @@ def general_config(horizon, input_size, exog_list, model_name):
                 "batch_size": 1,
                 "windows_batch_size": trial.suggest_categorical(
                     "windows_batch_size",
-                    [16, 64, 256]
+                    [16, 32, 64]
                 ),
                 "inference_windows_batch_size": 16,
                 "scaler_type": "standard",
